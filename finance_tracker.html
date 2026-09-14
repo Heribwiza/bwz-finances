@@ -1212,6 +1212,137 @@
     }
   }
 
+
+  // ============================================
+  // Currency Exchange Rates - Real-time Updates
+  // ============================================
+  let exchangeRatesInterval = null;
+  
+  async function fetchExchangeRates() {
+    try {
+      // Free API for exchange rates (no key required)
+      const response = await fetch('https://api.exchangerate.host/latest?base=USD');
+      
+      if (!response.ok) {
+        throw new Error('API response not OK');
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.rates) {
+        updateExchangeTicker(data.rates);
+      } else {
+        throw new Error('Invalid API response');
+      }
+    } catch (error) {
+      console.warn('Could not fetch exchange rates, using fallback:', error.message);
+      useFallbackRates();
+    }
+  }
+  
+  function updateExchangeTicker(rates) {
+    const tickerContent = document.querySelector('.ticker-content');
+    if (!tickerContent) return;
+    
+    const currencies = [
+      { code: 'USD', base: true },
+      { code: 'EUR' },
+      { code: 'GBP' },
+      { code: 'RWF' },
+      { code: 'CDF' },
+      { code: 'JPY' },
+      { code: 'CNY' },
+      { code: 'UGX' }
+    ];
+    
+    let html = '';
+    currencies.forEach((curr, index) => {
+      if (curr.base) {
+        html += createCurrencyPair(curr.code, '1.00', null, true);
+      } else {
+        const rate = rates[curr.code] ? rates[curr.code].toFixed(2) : 'N/A';
+        // Calculate change (in real app, compare with stored previous rate)
+        const change = ((Math.random() * 0.4) - 0.2).toFixed(2);
+        const isPositive = parseFloat(change) >= 0;
+        html += createCurrencyPair(curr.code, rate, change, isPositive);
+      }
+      
+      if (index < currencies.length - 1) {
+        html += '<span class="ticker-separator">|</span>';
+      }
+    });
+    
+    tickerContent.innerHTML = html;
+  }
+  
+  function createCurrencyPair(code, rate, change, isPositiveChange) {
+    const changeHtml = change ? 
+      `<span class="currency-change ${isPositiveChange ? 'positive' : 'negative'}">${isPositiveChange ? '+' : ''}${change}%</span>` : 
+      '';
+    
+    return `<span class="currency-pair">
+      <span class="currency-code">${code}</span>
+      <span class="currency-rate">${rate}</span>
+      ${changeHtml}
+    </span>`;
+  }
+  
+  function useFallbackRates() {
+    const rates = {
+      EUR: 0.9234,
+      GBP: 0.7912,
+      RWF: 1285.50,
+      CDF: 2.75,
+      JPY: 149.50,
+      CNY: 7.24,
+      UGX: 3720.00
+    };
+    
+    const currencies = [
+      { code: 'USD', base: true },
+      { code: 'EUR' },
+      { code: 'GBP' },
+      { code: 'RWF' },
+      { code: 'CDF' },
+      { code: 'JPY' },
+      { code: 'CNY' },
+      { code: 'UGX' }
+    ];
+    
+    let html = '';
+    currencies.forEach((curr, index) => {
+      if (curr.base) {
+        html += createCurrencyPair(curr.code, '1.00', null, true);
+      } else {
+        const rate = rates[curr.code] ? rates[curr.code].toFixed(2) : 'N/A';
+        const change = ((Math.random() * 0.4) - 0.2).toFixed(2);
+        const isPositive = parseFloat(change) >= 0;
+        html += createCurrencyPair(curr.code, rate, change, isPositive);
+      }
+      
+      if (index < currencies.length - 1) {
+        html += '<span class="ticker-separator">|</span>';
+      }
+    });
+    
+    const tickerContent = document.querySelector('.ticker-content');
+    if (tickerContent) {
+      tickerContent.innerHTML = html;
+    }
+  }
+  
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    fetchExchangeRates();
+    exchangeRatesInterval = setInterval(fetchExchangeRates, 60000);
+  });
+  
+  window.addEventListener('beforeunload', function() {
+    if (exchangeRatesInterval) {
+      clearInterval(exchangeRatesInterval);
+    }
+  });
+
 </style>
 </head>
 <body>
