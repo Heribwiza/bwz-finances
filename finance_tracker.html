@@ -14,6 +14,7 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%2310B981'/%3E%3Ctext x='50' y='68' font-size='42' font-family='sans-serif' font-weight='700' fill='%23FFFFFF' text-anchor='middle'%3EBWZ%3C/text%3E%3C/svg%3E">
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22BWZ%20CORPORATION%20Finance%20Tracker%22%2C%22short_name%22%3A%22BWZ%20Finances%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%23F9FAFB%22%2C%22theme_color%22%3A%22%2310B981%22%7D">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root{
     /* Modern Color Palette */
@@ -737,6 +738,7 @@
       <div class="sync-status connected" id="syncStatus">Synced with your account</div>
     </div>
     <div class="btn-row">
+      <input type="text" id="globalSearch" placeholder="Search transactions..." style="padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px; width: 200px; background: var(--paper);">
       <button class="btn btn-ghost btn-small" id="refreshBtn">Refresh</button>
       <button class="btn btn-ghost btn-small" id="exportBtn">Export backup (.json)</button>
       <button class="btn btn-ghost btn-small" id="importBtn">Import backup (.json)</button>
@@ -747,11 +749,99 @@
 
   <!-- Tab Navigation -->
   <nav class="tab-nav no-print">
+    <button class="tab-btn" data-tab="dashboard">Dashboard</button>
     <button class="tab-btn active" data-tab="expenses">Expenses</button>
     <button class="tab-btn" data-tab="income">Income</button>
     <button class="tab-btn" data-tab="savings">Savings</button>
     <button class="tab-btn" data-tab="debts">Debts</button>
   </nav>
+
+  <!-- Dashboard Section -->
+  <div class="section-container" id="dashboardSection">
+    <h2 style="margin-bottom: var(--spacing-lg);">Financial Overview</h2>
+    
+    <!-- Key Metrics -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="dashTotalBalance">0</div>
+        <div class="stat-label">Total Balance</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashMonthlyIncome">0</div>
+        <div class="stat-label">Monthly Income</div>
+      </div>
+      <div class="stat-box warn">
+        <div class="stat-num" id="dashMonthlyExpenses">0</div>
+        <div class="stat-label">Monthly Expenses</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashNetCashFlow">0</div>
+        <div class="stat-label">Net Cash Flow</div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid-2" style="margin-bottom: var(--spacing-lg);">
+      <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Expenses by Category</h3>
+        <div style="position: relative; height: 250px;">
+          <canvas id="expenseCategoryChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Income vs Expenses (Monthly)</h3>
+        <div style="position: relative; height: 250px;">
+          <canvas id="incomeExpenseChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Recent Expenses</h3>
+        <div id="recentExpenses" style="max-height: 250px; overflow-y: auto;">
+          <table style="font-size: 13px;">
+            <thead>
+              <tr><th>Date</th><th>Category</th><th class="amount">Amount</th></tr>
+            </thead>
+            <tbody id="recentExpensesBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Recent Income</h3>
+        <div id="recentIncome" style="max-height: 250px; overflow-y: auto;">
+          <table style="font-size: 13px;">
+            <thead>
+              <tr><th>Date</th><th>Source</th><th class="amount">Amount</th></tr>
+            </thead>
+            <tbody id="recentIncomeBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row" style="margin-top: var(--spacing-lg);">
+      <div class="stat-box">
+        <div class="stat-num" id="dashTotalDebt">0</div>
+        <div class="stat-label">Total Debt</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashSavingsBalance">0</div>
+        <div class="stat-label">Savings Balance</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashSavingsRate">0%</div>
+        <div class="stat-label">Savings Rate</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashTransactionsCount">0</div>
+        <div class="stat-label">Total Transactions</div>
+      </div>
+    </div>
+  </div>
 
   <!-- Expenses Section -->
   <div class="section-container active" id="expensesSection">
@@ -793,7 +883,20 @@
       </div>
       <div class="field">
         <label for="expCategory">Category</label>
-        <input type="text" id="expCategory" placeholder="e.g. Food, Transport, Rent">
+        <select id="expCategory">
+          <option value="">Select category...</option>
+          <option value="Food & Dining">Food & Dining</option>
+          <option value="Transportation">Transportation</option>
+          <option value="Housing/Rent">Housing/Rent</option>
+          <option value="Utilities">Utilities</option>
+          <option value="Healthcare">Healthcare</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Education">Education</option>
+          <option value="Communication">Communication</option>
+          <option value="Subscriptions">Subscriptions</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div class="field">
         <label for="expDesc">Description (optional)</label>
@@ -854,10 +957,14 @@
         <div class="field">
           <label for="incomeCategory">Category</label>
           <select id="incomeCategory">
+            <option value="">Select category...</option>
             <option value="Salary">Salary</option>
             <option value="Freelance">Freelance</option>
-            <option value="Gift">Gift</option>
-            <option value="Investment">Investment</option>
+            <option value="Business">Business</option>
+            <option value="Investments">Investments</option>
+            <option value="Rental Income">Rental Income</option>
+            <option value="Gifts">Gifts</option>
+            <option value="Refunds">Refunds</option>
             <option value="Other">Other</option>
           </select>
         </div>
@@ -1122,7 +1229,9 @@
     }
     
     // Re-render relevant data
-    if (tabName === 'expenses') {
+    if (tabName === 'dashboard') {
+      renderDashboard();
+    } else if (tabName === 'expenses') {
       renderExpenses();
     } else if (tabName === 'income') {
       renderIncome();
@@ -1377,9 +1486,20 @@
   function renderExpenses(){
     const selectedMonth = $('monthPicker').value || monthKey(todayISO());
     $('expenseMonthLabel').textContent = monthLabel(selectedMonth);
-    const rows = data.expenses
+    let rows = data.expenses
       .filter(e => monthKey(e.date) === selectedMonth)
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+    // Apply search filter
+    const searchTerm = $('globalSearch')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      rows = rows.filter(e => 
+        (e.category || '').toLowerCase().includes(searchTerm) ||
+        (e.description || '').toLowerCase().includes(searchTerm) ||
+        (e.date || '').includes(searchTerm) ||
+        String(e.amount).includes(searchTerm)
+      );
+    }
 
     const tbody = $('expenseTableBody');
     tbody.innerHTML = '';
@@ -1404,11 +1524,26 @@
   }
 
   function renderDebts(){
-    const rows = data.debts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    let rows = data.debts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    
+    // Apply search filter
+    const searchTerm = $('globalSearch')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      rows = rows.filter(d => 
+        (d.person || '').toLowerCase().includes(searchTerm) ||
+        (d.description || '').toLowerCase().includes(searchTerm) ||
+        (d.date || '').includes(searchTerm) ||
+        String(d.amount).includes(searchTerm) ||
+        (d.status || '').toLowerCase().includes(searchTerm)
+      );
+    }
+    
     const tbody = $('debtTableBody');
     tbody.innerHTML = '';
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No debts recorded yet.</td></tr>';
+      tbody.innerHTML = searchTerm
+        ? '<tr class="empty-row"><td colspan="6">No debts match your search.</td></tr>'
+        : '<tr class="empty-row"><td colspan="6">No debts recorded yet.</td></tr>';
     } else {
       rows.forEach((d, index) => {
         const tr = document.createElement('tr');
@@ -1445,12 +1580,24 @@
     
     let rows = data.income
       .filter(i => monthKey(i.date) === selectedMonth);
-    
+
     // Apply category filter
     if (categoryFilter !== 'all') {
       rows = rows.filter(i => i.category === categoryFilter);
     }
-    
+
+    // Apply search filter
+    const searchTerm = $('globalSearch')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      rows = rows.filter(i => 
+        (i.title || '').toLowerCase().includes(searchTerm) ||
+        (i.category || '').toLowerCase().includes(searchTerm) ||
+        (i.description || '').toLowerCase().includes(searchTerm) ||
+        (i.date || '').includes(searchTerm) ||
+        String(i.amount).includes(searchTerm)
+      );
+    }
+
     // Sort by date (newest first)
     rows = rows.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
@@ -1507,6 +1654,17 @@
     // Apply type filter
     if (typeFilter !== 'all') {
       rows = rows.filter(s => s.type === typeFilter);
+    }
+
+    // Apply search filter
+    const searchTerm = $('globalSearch')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      rows = rows.filter(s => 
+        (s.reason || '').toLowerCase().includes(searchTerm) ||
+        (s.type || '').toLowerCase().includes(searchTerm) ||
+        (s.date || '').includes(searchTerm) ||
+        String(s.amount).includes(searchTerm)
+      );
     }
     
     // Sort by date (most recent first)
@@ -1628,6 +1786,250 @@
       if (statUnpaidDebt) animateNumber(statUnpaidDebt, unpaidTotal);
       if (statPaidDebt) animateNumber(statPaidDebt, paidTotal);
     }
+  }
+
+  /* ---------- dashboard rendering ---------- */
+  function renderDashboard() {
+    const currentMonth = monthKey(todayISO());
+    
+    // Calculate current month income and expenses
+    const monthExpenses = data.expenses.filter(e => monthKey(e.date) === currentMonth);
+    const monthIncome = data.income.filter(i => monthKey(i.date) === currentMonth);
+    
+    const totalMonthExpenses = monthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const totalMonthIncome = monthIncome.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    const netCashFlow = totalMonthIncome - totalMonthExpenses;
+    
+    // Calculate total debt and savings
+    const totalDebt = data.debts.filter(d => d.status === 'unpaid').reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+    const totalSavings = data.savings
+      .filter(s => s.type === 'deposit')
+      .reduce((sum, s) => sum + (Number(s.amount) || 0), 0) -
+      data.savings
+      .filter(s => s.type === 'withdrawal')
+      .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+    
+    // Calculate savings rate
+    const savingsRate = totalMonthIncome > 0 ? ((totalMonthIncome - totalMonthExpenses) / totalMonthIncome * 100).toFixed(1) : 0;
+    
+    // Total transactions count
+    const totalTransactions = data.expenses.length + data.income.length + data.savings.length + data.debts.length;
+    
+    // Update dashboard stats
+    animateNumber($('dashMonthlyIncome'), totalMonthIncome);
+    animateNumber($('dashMonthlyExpenses'), totalMonthExpenses);
+    
+    const dashNetCashFlow = $('dashNetCashFlow');
+    if (dashNetCashFlow) {
+      animateNumber(dashNetCashFlow, netCashFlow);
+      dashNetCashFlow.style.color = netCashFlow >= 0 ? 'var(--good)' : 'var(--error)';
+    }
+    
+    const dashTotalDebt = $('dashTotalDebt');
+    if (dashTotalDebt) animateNumber(dashTotalDebt, totalDebt);
+    
+    const dashSavingsBalance = $('dashSavingsBalance');
+    if (dashSavingsBalance) {
+      animateNumber(dashSavingsBalance, totalSavings);
+      dashSavingsBalance.style.color = totalSavings >= 0 ? 'var(--ink)' : 'var(--error)';
+    }
+    
+    const dashSavingsRate = $('dashSavingsRate');
+    if (dashSavingsRate) {
+      dashSavingsRate.textContent = savingsRate + '%';
+      dashSavingsRate.style.color = parseFloat(savingsRate) >= 0 ? 'var(--good)' : 'var(--error)';
+    }
+    
+    const dashTransactionsCount = $('dashTransactionsCount');
+    if (dashTransactionsCount) dashTransactionsCount.textContent = totalTransactions;
+    
+    // Calculate total balance
+    const totalBalance = totalSavings - totalDebt + (totalMonthIncome - totalMonthExpenses);
+    const dashTotalBalance = $('dashTotalBalance');
+    if (dashTotalBalance) {
+      animateNumber(dashTotalBalance, totalBalance);
+      dashTotalBalance.style.color = totalBalance >= 0 ? 'var(--ink)' : 'var(--error)';
+    }
+    
+    // Render recent activity
+    renderRecentExpenses();
+    renderRecentIncome();
+    
+    // Update charts
+    updateExpenseCategoryChart(monthExpenses);
+    updateIncomeExpenseChart(monthIncome, monthExpenses);
+  }
+
+  function renderRecentExpenses() {
+    const tbody = $('recentExpensesBody');
+    if (!tbody) return;
+    
+    const recent = data.expenses
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+      .slice(0, 5);
+    
+    tbody.innerHTML = '';
+    if (recent.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--ink-soft); padding:20px;">No expenses yet</td></tr>';
+    } else {
+      recent.forEach(exp => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + escapeHtml(exp.date) + '</td><td>' + escapeHtml(exp.category || 'Other') + '</td><td class="amount">' + fmtAmount(exp.amount) + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  function renderRecentIncome() {
+    const tbody = $('recentIncomeBody');
+    if (!tbody) return;
+    
+    const recent = data.income
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+      .slice(0, 5);
+    
+    tbody.innerHTML = '';
+    if (recent.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--ink-soft); padding:20px;">No income yet</td></tr>';
+    } else {
+      recent.forEach(inc => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + escapeHtml(inc.date) + '</td><td>' + escapeHtml(inc.title || inc.category) + '</td><td class="amount">' + fmtAmount(inc.amount) + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Chart instances
+  let expenseCategoryChartInstance = null;
+  let incomeExpenseChartInstance = null;
+
+  function updateExpenseCategoryChart(monthExpenses) {
+    const ctx = document.getElementById('expenseCategoryChart');
+    if (!ctx) return;
+    
+    // Aggregate expenses by category
+    const categoryTotals = {};
+    monthExpenses.forEach(exp => {
+      const cat = exp.category || 'Other';
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + (Number(exp.amount) || 0);
+    });
+    
+    const labels = Object.keys(categoryTotals);
+    const values = Object.values(categoryTotals);
+    const colors = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16', '#E11D48'];
+    
+    if (expenseCategoryChartInstance) {
+      expenseCategoryChartInstance.destroy();
+    }
+    
+    expenseCategoryChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors.slice(0, labels.length),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { font: { size: 11 }, padding: 10 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const value = context.parsed;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                return ' ' + context.label + ': ' + fmtAmount(value) + ' (' + percentage + '%)';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updateIncomeExpenseChart(monthIncome, monthExpenses) {
+    const ctx = document.getElementById('incomeExpenseChart');
+    if (!ctx) return;
+    
+    // Group by month for last 6 months
+    const months = [];
+    const incomeByMonth = [];
+    const expensesByMonth = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKeyStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+      const monthLabel = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+      
+      months.push(monthLabel);
+      
+      const monthInc = data.income.filter(i => monthKey(i.date) === monthKeyStr);
+      const monthExp = data.expenses.filter(e => monthKey(e.date) === monthKeyStr);
+      
+      incomeByMonth.push(monthInc.reduce((sum, i) => sum + (Number(i.amount) || 0), 0));
+      expensesByMonth.push(monthExp.reduce((sum, e) => sum + (Number(e.amount) || 0), 0));
+    }
+    
+    if (incomeExpenseChartInstance) {
+      incomeExpenseChartInstance.destroy();
+    }
+    
+    incomeExpenseChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: 'Income',
+            data: incomeByMonth,
+            backgroundColor: '#10B981',
+            borderRadius: 4
+          },
+          {
+            label: 'Expenses',
+            data: expensesByMonth,
+            backgroundColor: '#EF4444',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { size: 12 }, usePointStyle: true, padding: 15 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ' ' + context.dataset.label + ': ' + fmtAmount(context.parsed.y);
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) { return fmtAmount(value); }
+            }
+          }
+        }
+      }
+    });
   }
 
   /* ---------- add / update / delete (write straight to Supabase) ---------- */
@@ -1791,6 +2193,15 @@
   $('importInput').addEventListener('change', (e) => {
     if (e.target.files[0]) importBackup(e.target.files[0]);
     e.target.value = '';
+  });
+
+  // Global search functionality
+  $('globalSearch')?.addEventListener('input', () => {
+    if (currentTab === 'expenses') renderExpenses();
+    else if (currentTab === 'income') renderIncome();
+    else if (currentTab === 'savings') renderSavings();
+    else if (currentTab === 'debts') renderDebts();
+    else if (currentTab === 'dashboard') renderDashboard();
   });
 
   /* ---------- init ---------- */
