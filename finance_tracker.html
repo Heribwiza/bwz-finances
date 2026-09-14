@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BWZ CORPORATION - Finance Tracker</title>
+<meta name="description" content="BWZ CORPORATION finance tracker — log spending, track income, manage savings, and monitor financial health.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#10B981">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BWZ Finances">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%2310B981'/%3E%3Ctext x='50' y='68' font-size='42' font-family='sans-serif' font-weight='700' fill='%23FFFFFF' text-anchor='middle'%3EBWZ%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%2310B981'/%3E%3Ctext x='50' y='68' font-size='42' font-family='sans-serif' font-weight='700' fill='%23FFFFFF' text-anchor='middle'%3EBWZ%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22BWZ%20CORPORATION%20Finance%20Tracker%22%2C%22short_name%22%3A%22BWZ%20Finances%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%23F9FAFB%22%2C%22theme_color%22%3A%22%2310B981%22%7D">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    /* Modern Color Palette */
+    --primary: #10B981;
+    --primary-dark: #059669;
+    --primary-light: #D1FAE5;
+    --ink: #1F2937;
+    --ink-soft: #6B7280;
+    --ink-light: #9CA3AF;
+    --paper: #FFFFFF;
+    --background: #F9FAFB;
+    --background-alt: #F3F4F6;
+    --border: #E5E7EB;
+    --border-dark: #D1D5DB;
+    --error: #EF4444;
+    --error-light: #FEE2E2;
+    --good: #10B981;
+    --good-light: #D1FAE5;
+    --warning: #F59E0B;
+    --warning-light: #FEF3C7;
+    
+    /* Typography */
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'SF Mono', 'Consolas', 'Courier New', monospace;
+    
+    /* Spacing */
+    --maxw: 1024px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Transitions */
+    --transition-fast: 150ms ease-out;
+    --transition-normal: 250ms ease-out;
+    --transition-slow: 400ms ease-out;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  
+  body{
+    font-family:var(--font-body); color:var(--ink); background:var(--background);
+    line-height:1.6; padding:var(--spacing-lg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .wrap{
+    max-width:var(--maxw); margin:0 auto;
+    animation: fadeInUp 0.6s ease-out;
+  }
+  
+  h1{
+    font-size:32px; font-weight:700; color:var(--ink); margin-bottom:var(--spacing-xs);
+    letter-spacing: -0.02em;
+  }
+  
+  .subtitle{
+    color:var(--ink-soft); font-size:16px; margin-bottom:var(--spacing-xl);
+    line-height:1.5;
+  }
+  
+  h2{
+    font-size:20px; font-weight:600; color:var(--ink); margin-bottom:var(--spacing-md);
+    letter-spacing: -0.01em;
+  }
+  .card{
+    background:var(--paper); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:var(--spacing-lg); margin-bottom:var(--spacing-lg);
+    box-shadow:var(--shadow-sm);
+    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+  }
+  
+  .card:hover{
+    box-shadow:var(--shadow-md);
+  }
+  
+  .grid-2{
+    display:grid; grid-template-columns:1fr 1fr; gap:var(--spacing-lg);
+  }
+  
+  @media (max-width:700px){ 
+    .grid-2{grid-template-columns:1fr;} 
+  }
+
+  .field{margin-bottom:var(--spacing-md);}
+  
+  .field label{
+    display:block; font-size:13px; font-weight:600; color:var(--ink-soft); 
+    text-transform:uppercase; letter-spacing:0.05em; margin-bottom:var(--spacing-sm);
+  }
+  
+  .field input, .field select{
+    width:100%; border:1px solid var(--border); border-radius:var(--radius-md); 
+    padding:12px 14px; font-size:15px; color:var(--ink); background:var(--paper); 
+    font-family:inherit; transition: border-color var(--transition-fast), 
+    box-shadow var(--transition-fast);
+  }
+  
+  .field input:focus, .field select:focus{
+    outline:none; border-color:var(--primary); 
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+  
+  .field input::placeholder, .field select::placeholder{
+    color:var(--ink-light);
+  }
+  
+  .field-row{display:flex; gap:var(--spacing-md);}
+  .field-row .field{flex:1;}
+
+  .btn{
+    font-weight:600; font-size:14px; padding:12px 20px; border-radius:var(--radius-md); 
+    border:1px solid transparent; cursor:pointer; display:inline-flex; align-items:center; 
+    gap:8px; transition: all var(--transition-fast);
+    white-space: nowrap;
+  }
+  
+  .btn-primary{
+    background:var(--primary); color:#fff;
+    box-shadow:var(--shadow-sm);
+  }
+  
+  .btn-primary:hover{
+    background:var(--primary-dark); transform: translateY(-1px);
+    box-shadow:var(--shadow-md);
+  }
+  
+  .btn-primary:active{
+    transform: translateY(0);
+  }
+  
+  .btn-primary:disabled{
+    opacity:.6; cursor:default; transform:none;
+  }
+  
+  .btn-ghost{
+    background:var(--paper); border-color:var(--border); color:var(--ink);
+  }
+  
+  .btn-ghost:hover{
+    border-color:var(--primary); color:var(--primary);
+    background:var(--primary-light);
+  }
+  
+  .btn-small{
+    font-size:13px; padding:8px 14px;
+  }
+  
+  .btn-danger{
+    background:var(--paper); border-color:var(--error); color:var(--error);
+  }
+  
+  .btn-danger:hover{
+    background:var(--error); color:#fff;
+  }
+  
+  .btn-good{
+    background:var(--paper); border-color:var(--good); color:var(--good);
+  }
+  
+  .btn-good:hover{
+    background:var(--good); color:#fff;
+  }
+  
+  .btn-row{
+    display:flex; gap:var(--spacing-sm); flex-wrap:wrap; margin-top:var(--spacing-sm);
+  }
+
+  table{
+    width:100%; border-collapse:collapse; font-size:14px;
+  }
+  
+  th, td{
+    text-align:left; padding:12px 16px; border-bottom:1px solid var(--border);
+  }
+  
+  th{
+    font-size:12px; text-transform:uppercase; letter-spacing:0.06em; 
+    color:var(--ink-soft); font-weight:600; background:var(--background-alt);
+  }
+  
+  td.amount, th.amount{
+    text-align:right; font-family:var(--font-mono); font-weight:600;
+  }
+  
+  tr{
+    transition: background-color var(--transition-fast);
+  }
+  
+  tr:hover{
+    background-color:var(--background-alt);
+  }
+  
+  tr.paid{
+    opacity:.5;
+  }
+  
+  .status-pill{
+    display:inline-block; font-size:11px; font-weight:700; padding:4px 10px; 
+    border-radius:20px; text-transform:uppercase; letter-spacing:0.04em;
+  }
+  
+  .status-pill.unpaid{
+    background:var(--error-light); color:var(--error);
+  }
+  
+  .status-pill.paid{
+    background:var(--good-light); color:var(--good);
+  }
+  
+  .empty-row td{
+    text-align:center; color:var(--ink-soft); padding:var(--spacing-xl); 
+    font-style:italic;
+  }
+
+  .stats-row{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:var(--spacing-md); 
+    margin-bottom:var(--spacing-lg);
+  }
+  
+  .stat-box{
+    background:var(--paper); border:1px solid var(--border); 
+    border-radius:var(--radius-lg); padding:var(--spacing-lg); text-align:center;
+    box-shadow:var(--shadow-sm);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  }
+  
+  .stat-box:hover{
+    transform: translateY(-2px);
+    box-shadow:var(--shadow-md);
+  }
+  
+  .stat-box .stat-num{
+    font-size:28px; font-weight:700; color:var(--ink); 
+    font-family:var(--font-mono); letter-spacing: -0.02em;
+  }
+  
+  .stat-box .stat-label{
+    font-size:13px; color:var(--ink-soft); margin-top:var(--spacing-sm);
+    font-weight:500;
+  }
+  
+  .stat-box.warn .stat-num{
+    color:var(--error);
+  }
+
+  .month-nav{
+    display:flex; align-items:center; gap:var(--spacing-sm); 
+    margin-bottom:var(--spacing-lg);
+  }
+  
+  .month-nav label{
+    font-size:14px; color:var(--ink-soft); font-weight:600;
+  }
+  
+  .month-nav select{
+    padding:10px 14px; border:1px solid var(--border); 
+    border-radius:var(--radius-md); font-size:14px;
+    background:var(--paper); color:var(--ink);
+    cursor:pointer;
+  }
+
+  .sync-bar{
+    display:flex; justify-content:space-between; align-items:center; 
+    flex-wrap:wrap; gap:var(--spacing-md);
+    background:var(--paper); border:1px solid var(--border); 
+    border-radius:var(--radius-lg); padding:var(--spacing-md) var(--spacing-lg); 
+    margin-bottom:var(--spacing-lg);
+    box-shadow:var(--shadow-sm);
+  }
+  
+  .sync-status{
+    font-size:14px; color:var(--ink-soft);
+  }
+  
+  .sync-status.connected{
+    color:var(--good); font-weight:600;
+  }
+  
+  .sync-status.disconnected{
+    color:var(--error); font-weight:600;
+  }
+
+  .toast{
+    position:fixed; bottom:var(--spacing-lg); right:var(--spacing-lg); 
+    background:var(--ink); color:#fff;
+    padding:14px 20px; border-radius:var(--radius-md); font-size:14px; 
+    box-shadow:var(--shadow-xl);
+    opacity:0; transform:translateY(12px); transition:all var(--transition-normal); 
+    pointer-events:none; z-index:1000;
+  }
+  
+  .toast.show{
+    opacity:1; transform:translateY(0);
+  }
+
+  .fatal-banner{
+    display:none; background:var(--error-light); border:1px solid var(--error); 
+    color:var(--error);
+    padding:var(--spacing-md) var(--spacing-lg); border-radius:var(--radius-md); 
+    margin-bottom:var(--spacing-lg); font-size:14px;
+  }
+  
+  .fatal-banner.show{
+    display:block;
+  }
+
+  /* ---------- auth screen ---------- */
+  #authScreen{
+    max-width:400px; margin:60px auto; background:var(--paper); 
+    border:1px solid var(--border); border-radius:var(--radius-xl); 
+    padding:var(--spacing-2xl);
+    box-shadow:var(--shadow-lg);
+    animation: fadeInUp 0.6s ease-out;
+  }
+  
+  #authScreen h1{
+    font-size:24px; margin-bottom:var(--spacing-xs);
+  }
+  
+  #authScreen .subtitle{
+    margin-bottom:var(--spacing-xl);
+  }
+  
+  #authError{
+    font-size:13px; color:var(--error); min-height:18px; 
+    margin-top:var(--spacing-sm);
+  }
+  
+  #appScreen{
+    display:none;
+  }
+
+  @media print{
+    body{background:#fff; padding:0;}
+    .no-print{display:none !important;}
+    .card{border:none; box-shadow:none; padding:0; margin-bottom:24px;}
+    .stats-row{margin-bottom:24px;}
+  }
+
+  /* ---------- Mobile Responsiveness ---------- */
+  @media (max-width: 1024px) {
+    .stats-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    body {
+      padding: var(--spacing-md);
+    }
+
+    h1 {
+      font-size: 28px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+    }
+
+    .stats-row {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+    }
+
+    .stat-box {
+      padding: var(--spacing-md);
+    }
+
+    .stat-box .stat-num {
+      font-size: 20px;
+    }
+
+    .card {
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .sync-bar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-md);
+    }
+
+    .btn-row {
+      width: 100%;
+    }
+
+    .btn-row .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .month-nav {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-sm);
+    }
+
+    .month-nav select {
+      width: 100%;
+    }
+
+    table {
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+    }
+
+    .btn-small {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    #authScreen {
+      margin: 40px auto;
+      padding: var(--spacing-lg);
+    }
+
+    .toast {
+      left: var(--spacing-md);
+      right: var(--spacing-md);
+      bottom: var(--spacing-md);
+    }
+
+    .tab-nav {
+      gap: var(--spacing-xs);
+      padding-bottom: var(--spacing-xs);
+    }
+
+    .tab-btn {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 24px;
+    }
+
+    .stat-box .stat-num {
+      font-size: 20px;
+    }
+
+    .field-row {
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    table {
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 8px 10px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      font-size: 13px;
+    }
+  }
+
+  /* ---------- Animations ---------- */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fadeOut {
+    to {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ---------- Loading States ---------- */
+  .skeleton {
+    background: linear-gradient(90deg, var(--background-alt) 25%, var(--border) 50%, var(--background-alt) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+  }
+
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* ---------- Table Row Animations ---------- */
+  tbody tr {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  tbody tr.removing {
+    animation: fadeOut 0.3s ease-out forwards;
+  }
+
+  /* ---------- Animations ---------- */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ---------- Loading States ---------- */
+  .skeleton {
+    background: linear-gradient(90deg, var(--background-alt) 25%, var(--border) 50%, var(--background-alt) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* ---------- Table Row Animations ---------- */
+  tbody tr {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  tbody tr.removing {
+    animation: fadeOut 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeOut {
+    to {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+  }
+
+  /* ---------- Number Counter Animation ---------- */
+  .stat-num {
+    transition: color 0.3s ease-out;
+  }
+
+  .text-negative {
+    color: var(--error);
+    font-weight: 600;
+  }
+
+  /* ---------- Tab Navigation ---------- */
+  .tab-nav {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--spacing-sm);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .tab-btn:hover {
+    color: var(--ink);
+    background: var(--background-alt);
+  }
+
+  .tab-btn.active {
+    color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: calc(var(--spacing-sm) * -1);
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* ---------- Section Containers ---------- */
+  .section-container {
+    display: none;
+  }
+
+  .section-container.active {
+    display: block;
+    animation: fadeInUp 0.4s ease-out;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH SCREEN ============ -->
+<div id="authScreen">
+  <h1>BWZ CORPORATION</h1>
+  <p class="subtitle">Finance Tracker - Sign in to manage your finances.</p>
+  <div class="field">
+    <label for="authEmail">Email</label>
+    <input type="email" id="authEmail" autocomplete="email">
+  </div>
+  <div class="field">
+    <label for="authPassword">Password</label>
+    <input type="password" id="authPassword" autocomplete="current-password">
+  </div>
+  <button class="btn btn-primary" id="signInBtn" style="width:100%; justify-content:center;">Sign in</button>
+  <div id="authError"></div>
+</div>
+
+<!-- ============ APP SCREEN ============ -->
+<div class="wrap" id="appScreen">
+  <h1>BWZ CORPORATION</h1>
+  <p class="subtitle">Comprehensive finance tracker for expense, income, savings, and debt management.</p>
+
+  <div class="fatal-banner no-print" id="fatalBanner"></div>
+
+  <div class="sync-bar no-print">
+    <div>
+      <div class="sync-status connected" id="syncStatus">Synced with your account</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-small" id="refreshBtn">Refresh</button>
+      <button class="btn btn-ghost btn-small" id="exportBtn">Export backup (.json)</button>
+      <button class="btn btn-ghost btn-small" id="importBtn">Import backup (.json)</button>
+      <button class="btn btn-ghost btn-small" id="signOutBtn">Sign out</button>
+      <input type="file" id="importInput" accept="application/json" style="display:none">
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <nav class="tab-nav no-print">
+    <button class="tab-btn active" data-tab="expenses">Expenses</button>
+    <button class="tab-btn" data-tab="income">Income</button>
+    <button class="tab-btn" data-tab="savings">Savings</button>
+    <button class="tab-btn" data-tab="debts">Debts</button>
+  </nav>
+
+  <!-- Expenses Section -->
+  <div class="section-container active" id="expensesSection">
+    <div class="month-nav no-print">
+      <label for="monthPicker" style="font-size:13px; color:var(--ink-soft); font-weight:600;">Viewing month:</label>
+      <select id="monthPicker"></select>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="statTotalExpense">0</div>
+        <div class="stat-label">Total spent this month</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statTotalIncome">0</div>
+        <div class="stat-label">Total income this month</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statNetSavings">0</div>
+        <div class="stat-label">Net savings this month</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statSavingsRate">0%</div>
+        <div class="stat-label">Savings rate</div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <h2>Add an expense</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="expDate">Date</label>
+          <input type="date" id="expDate">
+        </div>
+        <div class="field">
+          <label for="expAmount">Amount</label>
+          <input type="number" id="expAmount" min="0" step="any" placeholder="e.g. 5000">
+        </div>
+      </div>
+      <div class="field">
+        <label for="expCategory">Category</label>
+        <input type="text" id="expCategory" placeholder="e.g. Food, Transport, Rent">
+      </div>
+      <div class="field">
+        <label for="expDesc">Description (optional)</label>
+        <input type="text" id="expDesc" placeholder="e.g. Lunch at work">
+      </div>
+      <button class="btn btn-primary" id="addExpenseBtn">Add expense</button>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h2 style="margin:0;">Expenses — <span id="expenseMonthLabel"></span></h2>
+        <button class="btn btn-ghost btn-small no-print" id="printBtn">Print report</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Category</th><th>Description</th><th class="amount">Amount</th><th class="no-print"></th></tr>
+        </thead>
+        <tbody id="expenseTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Income Section -->
+  <div class="section-container" id="incomeSection">
+    <div class="month-nav no-print">
+      <label for="incomeMonthPicker" style="font-size:13px; color:var(--ink-soft); font-weight:600;">Viewing month:</label>
+      <select id="incomeMonthPicker"></select>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="statIncomeTotal">0</div>
+        <div class="stat-label">Total income this month</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statIncomeByCategory">0</div>
+        <div class="stat-label">Selected category total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statIncomeSources">0</div>
+        <div class="stat-label">Income sources</div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <h2>Add income</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="incomeTitle">Title</label>
+          <input type="text" id="incomeTitle" placeholder="e.g. Freelance payment">
+        </div>
+        <div class="field">
+          <label for="incomeAmount">Amount</label>
+          <input type="number" id="incomeAmount" min="0" step="any" placeholder="e.g. 5000">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="incomeCategory">Category</label>
+          <select id="incomeCategory">
+            <option value="Salary">Salary</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Gift">Gift</option>
+            <option value="Investment">Investment</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="incomeDate">Date</label>
+          <input type="date" id="incomeDate">
+        </div>
+      </div>
+      <div class="field">
+        <label for="incomeDesc">Description (optional)</label>
+        <input type="text" id="incomeDesc" placeholder="e.g. Website design project">
+      </div>
+      <button class="btn btn-primary" id="addIncomeBtn">Add income</button>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h2 style="margin:0;">Income — <span id="incomeMonthLabel"></span></h2>
+        <div class="field-row" style="align-items:center; gap:8px;">
+          <label for="incomeCategoryFilter" style="font-size:12px; color:var(--ink-soft); font-weight:600; margin:0;">Filter:</label>
+          <select id="incomeCategoryFilter" style="padding:6px 10px; font-size:13px;">
+            <option value="all">All Categories</option>
+            <option value="Salary">Salary</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Gift">Gift</option>
+            <option value="Investment">Investment</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Title</th><th>Category</th><th>Description</th><th class="amount">Amount</th><th class="no-print"></th></tr>
+        </thead>
+        <tbody id="incomeTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Savings Section -->
+  <div class="section-container" id="savingsSection">
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="statSavingsBalance">0</div>
+        <div class="stat-label">Total savings balance</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statTotalDeposits">0</div>
+        <div class="stat-label">Total deposits</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statTotalWithdrawals">0</div>
+        <div class="stat-label">Total withdrawals</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statSavingsGrowth">0%</div>
+        <div class="stat-label">Savings growth</div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <h2>Add savings movement</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="savingsType">Type</label>
+          <select id="savingsType">
+            <option value="deposit">Deposit</option>
+            <option value="withdrawal">Withdrawal</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="savingsAmount">Amount</label>
+          <input type="number" id="savingsAmount" min="0" step="any" placeholder="e.g. 1000">
+        </div>
+      </div>
+      <div class="field">
+        <label for="savingsReason">Reason <span id="reasonRequired" style="color:var(--error); font-size:11px;">(required for withdrawals)</span></label>
+        <input type="text" id="savingsReason" placeholder="e.g. Building emergency fund">
+      </div>
+      <div class="field">
+        <label for="savingsDate">Date & time</label>
+        <input type="datetime-local" id="savingsDate">
+      </div>
+      <button class="btn btn-primary" id="addSavingsBtn">Add movement</button>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h2 style="margin:0;">Savings history</h2>
+        <div class="field-row" style="align-items:center; gap:8px;">
+          <label for="savingsTypeFilter" style="font-size:12px; color:var(--ink-soft); font-weight:600; margin:0;">Filter:</label>
+          <select id="savingsTypeFilter" style="padding:6px 10px; font-size:13px;">
+            <option value="all">All Types</option>
+            <option value="deposit">Deposits Only</option>
+            <option value="withdrawal">Withdrawals Only</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Date & time</th><th>Type</th><th>Amount</th><th>Reason</th><th class="no-print"></th></tr>
+        </thead>
+        <tbody id="savingsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Debts Section -->
+  <div class="section-container" id="debtsSection">
+    <div class="stats-row">
+      <div class="stat-box warn">
+        <div class="stat-num" id="statUnpaidDebt">0</div>
+        <div class="stat-label">Unpaid debt (all time)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statPaidDebt">0</div>
+        <div class="stat-label">Paid debt (all time)</div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <h2>Add a debt</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="debtDate">Date</label>
+          <input type="date" id="debtDate">
+        </div>
+        <div class="field">
+          <label for="debtAmount">Amount</label>
+          <input type="number" id="debtAmount" min="0" step="any" placeholder="e.g. 20000">
+        </div>
+      </div>
+      <div class="field">
+        <label for="debtPerson">Owed to / from</label>
+        <input type="text" id="debtPerson" placeholder="e.g. John, or a shop name">
+      </div>
+      <div class="field">
+        <label for="debtDesc">Description (optional)</label>
+        <input type="text" id="debtDesc" placeholder="e.g. Borrowed for transport">
+      </div>
+      <button class="btn btn-primary" id="addDebtBtn">Add debt</button>
+    </div>
+
+    <div class="card">
+      <h2>Debts</h2>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Owed to / from</th><th>Description</th><th class="amount">Amount</th><th>Status</th><th class="no-print"></th></tr>
+        </thead>
+        <tbody id="debtTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  /* ---------------------------------------------------------
+     Supabase connection.
+     The publishable key below is safe to expose client-side by design —
+     Row Level Security policies on the `expenses`/`debts` tables (set up
+     in the SQL editor) are what actually restrict access to each signed-in
+     user's own rows. Never put a secret/service_role key here.
+  --------------------------------------------------------- */
+  const SUPABASE_URL = "https://sxcshkumjmlweyclttsc.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_D_zIvEZOkr_578iWWq-PgA_N0ppMr6k";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  let data = { expenses: [], debts: [], income: [], savings: [] };
+  let currentUserId = null;
+  let realtimeChannel = null;
+  let currentTab = 'expenses';
+
+  const $ = (id) => document.getElementById(id);
+
+  function todayISO(){
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function fmtAmount(n){
+    return (Number(n)||0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  function animateNumber(element, targetValue, duration = 500) {
+    const startValue = parseFloat(element.textContent.replace(/,/g, '')) || 0;
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const currentValue = startValue + (targetValue - startValue) * easeOutQuart;
+      
+      element.textContent = fmtAmount(currentValue);
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      }
+    }
+    
+    requestAnimationFrame(update);
+  }
+
+  function showToast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function showFatal(msg){
+    const b = $('fatalBanner');
+    b.textContent = msg;
+    b.classList.add('show');
+  }
+
+  function showLoading(show) {
+    const expenseTable = $('expenseTableBody');
+    const debtTable = $('debtTableBody');
+    const incomeTable = $('incomeTableBody');
+    const savingsTable = $('savingsTableBody');
+    
+    if (show) {
+      if (expenseTable) expenseTable.innerHTML = '<tr><td colspan="5"><div class="skeleton" style="height: 48px; margin: 12px 0;"></div></td></tr>';
+      if (debtTable) debtTable.innerHTML = '<tr><td colspan="6"><div class="skeleton" style="height: 48px; margin: 12px 0;"></div></td></tr>';
+      if (incomeTable) incomeTable.innerHTML = '<tr><td colspan="6"><div class="skeleton" style="height: 48px; margin: 12px 0;"></div></td></tr>';
+      if (savingsTable) savingsTable.innerHTML = '<tr><td colspan="5"><div class="skeleton" style="height: 48px; margin: 12px 0;"></div></td></tr>';
+    }
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  /* ---------- tab navigation ---------- */
+  function switchTab(tabName) {
+    currentTab = tabName;
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.tab === tabName) {
+        btn.classList.add('active');
+      }
+    });
+    
+    // Update section visibility
+    document.querySelectorAll('.section-container').forEach(section => {
+      section.classList.remove('active');
+    });
+    
+    const activeSection = document.getElementById(tabName + 'Section');
+    if (activeSection) {
+      activeSection.classList.add('active');
+    }
+    
+    // Re-render relevant data
+    if (tabName === 'expenses') {
+      renderExpenses();
+    } else if (tabName === 'income') {
+      renderIncome();
+    } else if (tabName === 'savings') {
+      renderSavings();
+    } else if (tabName === 'debts') {
+      renderDebts();
+    }
+  }
+
+  // Tab button click handlers
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchTab(btn.dataset.tab);
+    });
+  });
+
+  /* ---------- auth ---------- */
+  $('signInBtn').addEventListener('click', async () => {
+    const email = $('authEmail').value.trim();
+    const password = $('authPassword').value;
+    $('authError').textContent = '';
+    if (!email || !password) { $('authError').textContent = 'Enter your email and password.'; return; }
+
+    $('signInBtn').disabled = true;
+    $('signInBtn').textContent = 'Signing in…';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    $('signInBtn').disabled = false;
+    $('signInBtn').textContent = 'Sign in';
+
+    if (error) { $('authError').textContent = error.message; }
+    // On success, onAuthStateChange (below) handles showing the app.
+  });
+
+  $('signOutBtn').addEventListener('click', async () => {
+    await sb.auth.signOut();
+  });
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (session && session.user) {
+      currentUserId = session.user.id;
+      $('authScreen').style.display = 'none';
+      $('appScreen').style.display = 'block';
+      subscribeRealtime();
+      fetchAll();
+    } else {
+      currentUserId = null;
+      if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+      $('authScreen').style.display = 'block';
+      $('appScreen').style.display = 'none';
+    }
+  });
+
+  /* ---------- data mapping (DB snake_case <-> app camelCase) ---------- */
+  function mapExpenseFromDb(row){
+    return { id: row.id, date: row.date, category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0 };
+  }
+  function mapDebtFromDb(row){
+    return { id: row.id, date: row.date, person: row.person || '', description: row.description || '', amount: Number(row.amount) || 0, status: row.status === 'paid' ? 'paid' : 'unpaid', paidDate: row.paid_date || null };
+  }
+  function mapIncomeFromDb(row){
+    return { id: row.id, title: row.title || '', category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0, date: row.date };
+  }
+  function mapSavingsFromDb(row){
+    return { id: row.id, type: row.type || 'deposit', amount: Number(row.amount) || 0, reason: row.reason || '', date: row.date };
+  }
+
+  /* ---------- fetch from Supabase ---------- */
+  async function fetchAll(){
+    try {
+      showLoading(true);
+      
+      // Fetch all data including new tables
+      const [expRes, debtRes, incomeRes, savingsRes] = await Promise.all([
+        sb.from('expenses').select('*').order('date', { ascending: true }),
+        sb.from('debts').select('*').order('date', { ascending: true }),
+        sb.from('income').select('*').order('date', { ascending: true }),
+        sb.from('savings').select('*').order('date', { ascending: false }),
+      ]);
+      
+      if (expRes.error) throw expRes.error;
+      if (debtRes.error) throw debtRes.error;
+      if (incomeRes.error) throw incomeRes.error;
+      if (savingsRes.error) throw savingsRes.error;
+
+      data.expenses = expRes.data.map(mapExpenseFromDb);
+      data.debts = debtRes.data.map(mapDebtFromDb);
+      data.income = incomeRes.data.map(mapIncomeFromDb);
+      data.savings = savingsRes.data.map(mapSavingsFromDb);
+      
+      setSyncStatus(true);
+      renderAll();
+    } catch (e) {
+      console.error('Fetch failed:', e);
+      setSyncStatus(false);
+      showFatal('Could not load your data from Supabase (' + (e.message || 'unknown error') + '). Check your internet connection and try Refresh.');
+    }
+  }
+
+  function setSyncStatus(ok){
+    const el = $('syncStatus');
+    if (ok) {
+      el.textContent = 'Synced with your account';
+      el.className = 'sync-status connected';
+    } else {
+      el.textContent = 'Connection issue — showing cached data';
+      el.className = 'sync-status disconnected';
+    }
+  }
+
+  /* ---------- realtime: refresh automatically when data changes on another device ---------- */
+  function subscribeRealtime(){
+    if (realtimeChannel) { sb.removeChannel(realtimeChannel); }
+    realtimeChannel = sb.channel('finance-tracker-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'debts' }, () => fetchAll())
+      // Try to subscribe to new tables - don't fail if they don't exist
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'income' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'savings' }, () => fetchAll())
+      .subscribe();
+  }
+
+  /* ---------- Export / Import (backup + bulk migration) ---------- */
+  function exportBackup(){
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bwz_finances_' + todayISO() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Backup downloaded.');
+  }
+
+  async function importBackup(file){
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        const expenses = Array.isArray(parsed.expenses) ? parsed.expenses : [];
+        const debts = Array.isArray(parsed.debts) ? parsed.debts : [];
+        const income = Array.isArray(parsed.income) ? parsed.income : [];
+        const savings = Array.isArray(parsed.savings) ? parsed.savings : [];
+        
+        if (expenses.length === 0 && debts.length === 0 && income.length === 0 && savings.length === 0) { 
+          showToast('That file has no entries to import.'); return; 
+        }
+
+        showToast('Importing ' + (expenses.length + debts.length + income.length + savings.length) + ' entries…');
+
+        if (expenses.length) {
+          const rows = expenses.map(e => ({
+            date: typeof e.date === 'string' && e.date ? e.date : todayISO(),
+            category: e.category || '',
+            description: e.description || '',
+            amount: Number(e.amount) || 0,
+          }));
+          const { error } = await sb.from('expenses').insert(rows);
+          if (error) throw error;
+        }
+        if (debts.length) {
+          const rows = debts.map(d => ({
+            date: typeof d.date === 'string' && d.date ? d.date : todayISO(),
+            person: d.person || '',
+            description: d.description || '',
+            amount: Number(d.amount) || 0,
+            status: d.status === 'paid' ? 'paid' : 'unpaid',
+            paid_date: d.paidDate || null,
+          }));
+          const { error } = await sb.from('debts').insert(rows);
+          if (error) throw error;
+        }
+        if (income.length) {
+          const rows = income.map(i => ({
+            title: i.title || '',
+            category: i.category || '',
+            description: i.description || '',
+            amount: Number(i.amount) || 0,
+            date: typeof i.date === 'string' && i.date ? i.date : todayISO(),
+          }));
+          const { error } = await sb.from('income').insert(rows);
+          if (error) throw error;
+        }
+        if (savings.length) {
+          const rows = savings.map(s => ({
+            type: s.type === 'withdrawal' ? 'withdrawal' : 'deposit',
+            amount: Number(s.amount) || 0,
+            reason: s.reason || '',
+            date: s.date || new Date().toISOString(),
+          }));
+          const { error } = await sb.from('savings').insert(rows);
+          if (error) throw error;
+        }
+        showToast('Import complete.');
+        fetchAll();
+      } catch (e) {
+        console.error(e);
+        showToast('Import failed: ' + (e.message || 'unknown error'));
+      }
+    };
+    reader.onerror = () => showToast('Could not read that file.');
+    reader.readAsText(file);
+  }
+
+  /* ---------- month picker ---------- */
+  function monthKey(dateStr){ return (dateStr || '').slice(0, 7); }
+
+  function monthLabel(key){
+    if (!key) return '';
+    const [y, m] = key.split('-').map(Number);
+    if (!y || !m) return key;
+    return new Date(y, m - 1, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' });
+  }
+
+  function populateMonthPicker(){
+    const keys = new Set(data.expenses.map(e => monthKey(e.date)));
+    keys.add(monthKey(todayISO()));
+    const sorted = Array.from(keys).filter(Boolean).sort().reverse();
+    const picker = $('monthPicker');
+    const prevValue = picker.value;
+    picker.innerHTML = '';
+    sorted.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = monthLabel(k);
+      picker.appendChild(opt);
+    });
+    picker.value = sorted.includes(prevValue) ? prevValue : monthKey(todayISO());
+  }
+
+  function populateIncomeMonthPicker(){
+    const picker = $('incomeMonthPicker');
+    if (!picker) return;
+    
+    const keys = new Set(data.income.map(i => monthKey(i.date)));
+    keys.add(monthKey(todayISO()));
+    const sorted = Array.from(keys).filter(Boolean).sort().reverse();
+    const prevValue = picker.value;
+    picker.innerHTML = '';
+    sorted.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = monthLabel(k);
+      picker.appendChild(opt);
+    });
+    picker.value = sorted.includes(prevValue) ? prevValue : monthKey(todayISO());
+  }
+
+  /* ---------- render ---------- */
+  function renderExpenses(){
+    const selectedMonth = $('monthPicker').value || monthKey(todayISO());
+    $('expenseMonthLabel').textContent = monthLabel(selectedMonth);
+    const rows = data.expenses
+      .filter(e => monthKey(e.date) === selectedMonth)
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+    const tbody = $('expenseTableBody');
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No expenses logged for this month yet.</td></tr>';
+    } else {
+      rows.forEach((e, index) => {
+        const tr = document.createElement('tr');
+        tr.style.animationDelay = (index * 0.05) + 's';
+        tr.innerHTML =
+          '<td>' + escapeHtml(e.date) + '</td>' +
+          '<td>' + escapeHtml(e.category || '—') + '</td>' +
+          '<td>' + escapeHtml(e.description || '') + '</td>' +
+          '<td class="amount">' + fmtAmount(e.amount) + '</td>' +
+          '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-expense="' + e.id + '" aria-label="Remove expense: ' + escapeHtml(e.description || e.category || e.date) + '">Remove</button></td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    const total = rows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    animateNumber($('statTotalExpense'), total);
+  }
+
+  function renderDebts(){
+    const rows = data.debts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const tbody = $('debtTableBody');
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No debts recorded yet.</td></tr>';
+    } else {
+      rows.forEach((d, index) => {
+        const tr = document.createElement('tr');
+        if (d.status === 'paid') tr.className = 'paid';
+        tr.style.animationDelay = (index * 0.05) + 's';
+        tr.innerHTML =
+          '<td>' + escapeHtml(d.date || '') + '</td>' +
+          '<td>' + escapeHtml(d.person || '') + '</td>' +
+          '<td>' + escapeHtml(d.description || '') + '</td>' +
+          '<td class="amount">' + fmtAmount(d.amount) + '</td>' +
+          '<td><span class="status-pill ' + d.status + '">' + d.status + '</span></td>' +
+          '<td class="no-print">' +
+            (d.status === 'unpaid'
+              ? '<button class="btn btn-good btn-small" data-mark-paid="' + d.id + '" aria-label="Mark paid: ' + escapeHtml(d.person || d.description || d.date) + '">Mark paid</button>'
+              : '<button class="btn btn-ghost btn-small" data-mark-unpaid="' + d.id + '" aria-label="Mark unpaid: ' + escapeHtml(d.person || d.description || d.date) + '">Mark unpaid</button>') +
+            ' <button class="btn btn-danger btn-small" data-remove-debt="' + d.id + '" aria-label="Delete debt: ' + escapeHtml(d.person || d.description || d.date) + '">Delete</button>' +
+          '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    const unpaidTotal = data.debts.filter(d => d.status === 'unpaid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
+    const paidTotal = data.debts.filter(d => d.status === 'paid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
+    animateNumber($('statUnpaidDebt'), unpaidTotal);
+    animateNumber($('statPaidDebt'), paidTotal);
+  }
+
+  function renderIncome(){
+    const selectedMonth = $('incomeMonthPicker').value || monthKey(todayISO());
+    const incomeMonthLabel = $('incomeMonthLabel');
+    if (incomeMonthLabel) incomeMonthLabel.textContent = monthLabel(selectedMonth);
+    
+    const categoryFilter = $('incomeCategoryFilter')?.value || 'all';
+    
+    let rows = data.income
+      .filter(i => monthKey(i.date) === selectedMonth);
+    
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      rows = rows.filter(i => i.category === categoryFilter);
+    }
+    
+    // Sort by date (newest first)
+    rows = rows.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    const tbody = $('incomeTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+      const message = categoryFilter === 'all' 
+        ? 'No income recorded for this month yet.' 
+        : `No ${categoryFilter.toLowerCase()} income recorded for this month yet.`;
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">' + message + '</td></tr>';
+    } else {
+      rows.forEach((i, index) => {
+        const tr = document.createElement('tr');
+        tr.style.animationDelay = (index * 0.05) + 's';
+        tr.innerHTML =
+          '<td>' + escapeHtml(i.date) + '</td>' +
+          '<td>' + escapeHtml(i.title) + '</td>' +
+          '<td><span class="status-pill paid">' + escapeHtml(i.category) + '</span></td>' +
+          '<td>' + escapeHtml(i.description || '') + '</td>' +
+          '<td class="amount">' + fmtAmount(i.amount) + '</td>' +
+          '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-income="' + i.id + '" aria-label="Remove income: ' + escapeHtml(i.title) + '">Remove</button></td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Calculate totals
+    const monthIncome = data.income.filter(i => monthKey(i.date) === selectedMonth);
+    const total = monthIncome.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    
+    const categoryTotal = categoryFilter === 'all' 
+      ? total 
+      : monthIncome.filter(i => i.category === categoryFilter).reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    
+    // Count unique income sources (categories)
+    const uniqueCategories = new Set(monthIncome.map(i => i.category));
+    const incomeSources = uniqueCategories.size;
+    
+    const statIncomeTotal = $('statIncomeTotal');
+    const statIncomeByCategory = $('statIncomeByCategory');
+    const statIncomeSources = $('statIncomeSources');
+    
+    if (statIncomeTotal) animateNumber(statIncomeTotal, total);
+    if (statIncomeByCategory) animateNumber(statIncomeByCategory, categoryTotal);
+    if (statIncomeSources) statIncomeSources.textContent = incomeSources;
+  }
+
+  function renderSavings(){
+    const typeFilter = $('savingsTypeFilter')?.value || 'all';
+    
+    let rows = data.savings.slice();
+    
+    // Apply type filter
+    if (typeFilter !== 'all') {
+      rows = rows.filter(s => s.type === typeFilter);
+    }
+    
+    // Sort by date (most recent first)
+    rows = rows.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    const tbody = $('savingsTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+      const message = typeFilter === 'all' 
+        ? 'No savings movements recorded yet.' 
+        : `No ${typeFilter} movements recorded yet.`;
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">' + message + '</td></tr>';
+    } else {
+      rows.forEach((s, index) => {
+        const tr = document.createElement('tr');
+        tr.style.animationDelay = (index * 0.05) + 's';
+        const isDeposit = s.type === 'deposit';
+        const typeClass = isDeposit ? 'status-pill paid' : 'status-pill unpaid';
+        const amountClass = isDeposit ? '' : 'text-negative';
+        const amountPrefix = isDeposit ? '+' : '-';
+        
+        tr.innerHTML =
+          '<td>' + escapeHtml(new Date(s.date).toLocaleString()) + '</td>' +
+          '<td><span class="' + typeClass + '">' + (isDeposit ? 'Deposit' : 'Withdrawal') + '</span></td>' +
+          '<td class="amount ' + amountClass + '">' + amountPrefix + fmtAmount(s.amount) + '</td>' +
+          '<td>' + escapeHtml(s.reason) + '</td>' +
+          '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-savings="' + s.id + '" aria-label="Remove savings: ' + escapeHtml(s.reason) + '">Remove</button></td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Calculate totals (always show overall stats, not filtered)
+    const totalDeposits = data.savings.filter(s => s.type === 'deposit').reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+    const totalWithdrawals = data.savings.filter(s => s.type === 'withdrawal').reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+    const balance = totalDeposits - totalWithdrawals;
+    
+    // Calculate savings growth (deposit ratio)
+    const totalMovements = totalDeposits + totalWithdrawals;
+    const savingsGrowth = totalMovements > 0 ? ((totalDeposits / totalMovements) * 100).toFixed(1) : 0;
+    
+    const statSavingsBalance = $('statSavingsBalance');
+    const statTotalDeposits = $('statTotalDeposits');
+    const statTotalWithdrawals = $('statTotalWithdrawals');
+    const statSavingsGrowth = $('statSavingsGrowth');
+    
+    if (statSavingsBalance) {
+      animateNumber(statSavingsBalance, balance);
+      // Color code balance
+      statSavingsBalance.style.color = balance >= 0 ? 'var(--ink)' : 'var(--error)';
+    }
+    if (statTotalDeposits) animateNumber(statTotalDeposits, totalDeposits);
+    if (statTotalWithdrawals) animateNumber(statTotalWithdrawals, totalWithdrawals);
+    if (statSavingsGrowth) {
+      statSavingsGrowth.textContent = savingsGrowth + '%';
+      statSavingsGrowth.style.color = savingsGrowth >= 50 ? 'var(--good)' : 'var(--warning)';
+    }
+  }
+
+  function renderAll(){
+    try {
+      populateMonthPicker();
+      populateIncomeMonthPicker();
+      
+      // Render based on current tab
+      if (currentTab === 'expenses') {
+        renderExpenses();
+      } else if (currentTab === 'income') {
+        renderIncome();
+      } else if (currentTab === 'savings') {
+        renderSavings();
+      } else if (currentTab === 'debts') {
+        renderDebts();
+      }
+      
+      // Always update stats for the current view
+      updateStats();
+    } catch (e) {
+      console.error('Render failed:', e);
+      showFatal('Something went wrong displaying your data. Try Refresh — your data in Supabase is untouched.');
+    }
+  }
+
+  function updateStats() {
+    // Calculate stats for current tab
+    if (currentTab === 'expenses') {
+      const selectedMonth = $('monthPicker').value || monthKey(todayISO());
+      const monthExpenses = data.expenses.filter(e => monthKey(e.date) === selectedMonth);
+      const monthIncome = data.income.filter(i => monthKey(i.date) === selectedMonth);
+      
+      const totalExpense = monthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const totalIncome = monthIncome.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      const netSavings = totalIncome - totalExpense;
+      const savingsRate = totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0;
+      
+      const statTotalExpense = $('statTotalExpense');
+      const statTotalIncome = $('statTotalIncome');
+      const statNetSavings = $('statNetSavings');
+      const statSavingsRate = $('statSavingsRate');
+      
+      if (statTotalExpense) animateNumber(statTotalExpense, totalExpense);
+      if (statTotalIncome) animateNumber(statTotalIncome, totalIncome);
+      if (statNetSavings) {
+        animateNumber(statNetSavings, netSavings);
+        statNetSavings.style.color = netSavings >= 0 ? 'var(--ink)' : 'var(--error)';
+      }
+      if (statSavingsRate) {
+        statSavingsRate.textContent = savingsRate + '%';
+        statSavingsRate.style.color = savingsRate >= 0 ? 'var(--good)' : 'var(--error)';
+      }
+    } else if (currentTab === 'debts') {
+      const unpaidTotal = data.debts.filter(d => d.status === 'unpaid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
+      const paidTotal = data.debts.filter(d => d.status === 'paid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
+      
+      const statUnpaidDebt = $('statUnpaidDebt');
+      const statPaidDebt = $('statPaidDebt');
+      
+      if (statUnpaidDebt) animateNumber(statUnpaidDebt, unpaidTotal);
+      if (statPaidDebt) animateNumber(statPaidDebt, paidTotal);
+    }
+  }
+
+  /* ---------- add / update / delete (write straight to Supabase) ---------- */
+  $('addExpenseBtn').addEventListener('click', async () => {
+    const date = $('expDate').value || todayISO();
+    const amount = parseFloat($('expAmount').value);
+    const category = $('expCategory').value.trim();
+    const description = $('expDesc').value.trim();
+    if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
+
+    const { error } = await sb.from('expenses').insert({ date, category, description, amount });
+    if (error) { showToast('Could not save: ' + error.message); return; }
+    $('expAmount').value = ''; $('expCategory').value = ''; $('expDesc').value = '';
+    showToast('Expense added.');
+    fetchAll();
+  });
+
+  // Use a single debt button listener that works for both instances
+  $('addDebtBtn').addEventListener('click', async () => {
+    const date = $('debtDate').value || todayISO();
+    const amount = parseFloat($('debtAmount').value);
+    const person = $('debtPerson').value.trim();
+    const description = $('debtDesc').value.trim();
+    if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
+    if (!person) { showToast('Enter who the debt is with.'); return; }
+
+    const { error } = await sb.from('debts').insert({ date, person, description, amount, status: 'unpaid' });
+    if (error) { showToast('Could not save: ' + error.message); return; }
+    $('debtAmount').value = ''; $('debtPerson').value = ''; $('debtDesc').value = '';
+    showToast('Debt added.');
+    fetchAll();
+  });
+
+  $('addIncomeBtn').addEventListener('click', async () => {
+    const title = $('incomeTitle').value.trim();
+    const amount = parseFloat($('incomeAmount').value);
+    const category = $('incomeCategory').value;
+    const description = $('incomeDesc').value.trim();
+    const date = $('incomeDate').value || todayISO();
+    
+    if (!title) { showToast('Enter a title.'); return; }
+    if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
+
+    const { error } = await sb.from('income').insert({ title, category, description, amount, date });
+    if (error) { showToast('Could not save: ' + error.message); return; }
+    
+    // Clear form fields
+    $('incomeTitle').value = ''; 
+    $('incomeAmount').value = ''; 
+    $('incomeDesc').value = '';
+    $('incomeDate').value = todayISO();
+    
+    showToast('Income added.');
+    fetchAll();
+  });
+
+  $('addSavingsBtn').addEventListener('click', async () => {
+    const type = $('savingsType').value;
+    const amount = parseFloat($('savingsAmount').value);
+    const reason = $('savingsReason').value.trim();
+    const date = $('savingsDate').value || new Date().toISOString();
+    
+    if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
+    if (type === 'withdrawal' && !reason) { showToast('Reason is required for withdrawals.'); return; }
+
+    const { error } = await sb.from('savings').insert({ type, amount, reason: reason || (type === 'deposit' ? 'Savings deposit' : 'Savings withdrawal'), date });
+    if (error) { showToast('Could not save: ' + error.message); return; }
+    
+    // Clear form fields
+    $('savingsAmount').value = ''; 
+    $('savingsReason').value = '';
+    
+    // Reset date to current time
+    const now = new Date();
+    const datetimeLocal = now.getFullYear() + '-' + 
+      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(now.getDate()).padStart(2, '0') + 'T' + 
+      String(now.getHours()).padStart(2, '0') + ':' + 
+      String(now.getMinutes()).padStart(2, '0');
+    $('savingsDate').value = datetimeLocal;
+    
+    // Reset type to deposit
+    $('savingsType').value = 'deposit';
+    $('reasonRequired').style.display = 'none';
+    
+    showToast('Savings movement added.');
+    fetchAll();
+  });
+
+  document.addEventListener('click', async (e) => {
+    const t = e.target;
+    if (t.dataset.removeExpense) {
+      if (confirm('Remove this expense entry?')) {
+        const row = t.closest('tr');
+        row.classList.add('removing');
+        await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
+        const { error } = await sb.from('expenses').delete().eq('id', t.dataset.removeExpense);
+        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+      }
+    } else if (t.dataset.removeIncome) {
+      if (confirm('Remove this income entry?')) {
+        const row = t.closest('tr');
+        row.classList.add('removing');
+        await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
+        const { error } = await sb.from('income').delete().eq('id', t.dataset.removeIncome);
+        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+      }
+    } else if (t.dataset.removeSavings) {
+      if (confirm('Remove this savings movement?')) {
+        const row = t.closest('tr');
+        row.classList.add('removing');
+        await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
+        const { error } = await sb.from('savings').delete().eq('id', t.dataset.removeSavings);
+        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+      }
+    } else if (t.dataset.markPaid) {
+      const { error } = await sb.from('debts').update({ status: 'paid', paid_date: todayISO() }).eq('id', t.dataset.markPaid);
+      if (error) showToast('Could not update: ' + error.message); else { showToast('Marked as paid.'); fetchAll(); }
+    } else if (t.dataset.markUnpaid) {
+      const { error } = await sb.from('debts').update({ status: 'unpaid', paid_date: null }).eq('id', t.dataset.markUnpaid);
+      if (error) showToast('Could not update: ' + error.message); else { showToast('Marked as unpaid.'); fetchAll(); }
+    } else if (t.dataset.removeDebt) {
+      if (confirm('Delete this debt entry permanently?')) {
+        const row = t.closest('tr');
+        row.classList.add('removing');
+        await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
+        const { error } = await sb.from('debts').delete().eq('id', t.dataset.removeDebt);
+        if (error) showToast('Could not delete: ' + error.message); else fetchAll();
+      }
+    }
+  });
+
+  $('monthPicker').addEventListener('change', () => { renderExpenses(); updateStats(); });
+  const incomeMonthPicker = $('incomeMonthPicker');
+  if (incomeMonthPicker) {
+    incomeMonthPicker.addEventListener('change', () => { renderIncome(); updateStats(); });
+  }
+  
+  const incomeCategoryFilter = $('incomeCategoryFilter');
+  if (incomeCategoryFilter) {
+    incomeCategoryFilter.addEventListener('change', () => { renderIncome(); });
+  }
+  
+  const savingsTypeFilter = $('savingsTypeFilter');
+  if (savingsTypeFilter) {
+    savingsTypeFilter.addEventListener('change', () => { renderSavings(); });
+  }
+  
+  // Update reason required label based on savings type
+  const savingsType = $('savingsType');
+  const reasonRequired = $('reasonRequired');
+  if (savingsType && reasonRequired) {
+    savingsType.addEventListener('change', () => {
+      reasonRequired.style.display = savingsType.value === 'withdrawal' ? 'inline' : 'none';
+    });
+  }
+  $('refreshBtn').addEventListener('click', () => { fetchAll(); showToast('Refreshed.'); });
+  $('exportBtn').addEventListener('click', exportBackup);
+  $('importBtn').addEventListener('click', () => $('importInput').click());
+  $('printBtn').addEventListener('click', () => window.print());
+  $('importInput').addEventListener('change', (e) => {
+    if (e.target.files[0]) importBackup(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  /* ---------- init ---------- */
+  $('expDate').value = todayISO();
+  $('debtDate').value = todayISO();
+  
+  const incomeDate = $('incomeDate');
+  if (incomeDate) incomeDate.value = todayISO();
+  
+  // Set current datetime for savings
+  const savingsDate = $('savingsDate');
+  if (savingsDate) {
+    const now = new Date();
+    // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+    const datetimeLocal = now.getFullYear() + '-' + 
+      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(now.getDate()).padStart(2, '0') + 'T' + 
+      String(now.getHours()).padStart(2, '0') + ':' + 
+      String(now.getMinutes()).padStart(2, '0');
+    savingsDate.value = datetimeLocal;
+  }
+  
+  $('authEmail').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('authPassword').focus(); });
+  $('authPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('signInBtn').click(); });
+
+  // Initialize tab navigation
+  switchTab('expenses');
+  
+  // Initialize savings form state
+  const reasonRequiredInit = $('reasonRequired');
+  if (reasonRequiredInit) {
+    reasonRequiredInit.style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
