@@ -1,0 +1,5 @@
+# GitHub Pages Configuration
+# This file tells GitHub which branch to use for GitHub Pages
+
+branch: master
+path: /
