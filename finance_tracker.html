@@ -760,6 +760,35 @@
   <div class="section-container" id="dashboardSection">
     <h2 style="margin-bottom: var(--spacing-lg);">Financial Overview</h2>
     
+    <!-- 🎨 ACTIVITY OVERVIEW CHART - Colorful Bar Chart -->
+    <div class="card" style="margin-bottom: var(--spacing-lg);">
+      <h3 style="margin-bottom: var(--spacing-md); font-size: 16px; color: var(--ink); display: flex; align-items: center; gap: 8px;">
+        <span>📈</span> Monthly Activity Overview
+      </h3>
+      <div style="position: relative; height: 200px;">
+        <canvas id="activityOverviewChart"></canvas>
+      </div>
+      <!-- Legend -->
+      <div style="display: flex; justify-content: center; gap: 24px; margin-top: 16px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft);">
+          <span style="width: 12px; height: 12px; background: linear-gradient(135deg, #10B981, #34D399); border-radius: 2px;"></span>
+          Income
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft);">
+          <span style="width: 12px; height: 12px; background: linear-gradient(135deg, #EF4444, #F87171); border-radius: 2px;"></span>
+          Expenses
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft);">
+          <span style="width: 12px; height: 12px; background: linear-gradient(135deg, #3B82F6, #60A5FA); border-radius: 2px;"></span>
+          Savings
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft);">
+          <span style="width: 12px; height: 12px; background: linear-gradient(135deg, #F59E0B, #FBBF24); border-radius: 2px;"></span>
+          Debts
+        </div>
+      </div>
+    </div>
+
     <!-- Key Metrics -->
     <div class="stats-row">
       <div class="stat-box">
@@ -1858,6 +1887,7 @@
     // Update charts
     updateExpenseCategoryChart(monthExpenses);
     updateIncomeExpenseChart(monthIncome, monthExpenses);
+    updateActivityOverviewChart(monthExpenses, monthIncome);
   }
 
   function renderRecentExpenses() {
@@ -2194,6 +2224,156 @@
     if (e.target.files[0]) importBackup(e.target.files[0]);
     e.target.value = '';
   });
+
+  /* ---------- Activity Overview Chart (Colorful Bar Chart) ---------- */
+  let activityOverviewChartInstance = null;
+
+  function updateActivityOverviewChart(monthExpenses, monthIncome) {
+    const ctx = document.getElementById('activityOverviewChart');
+    if (!ctx) return;
+    
+    // Calculate data for the last 6 months
+    const months = [];
+    const incomeData = [];
+    const expenseData = [];
+    const savingsData = [];
+    const debtData = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKeyStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+      const monthLabel = date.toLocaleString('default', { month: 'short' });
+      
+      months.push(monthLabel);
+      
+      // Income
+      const monthInc = data.income.filter(i => monthKey(i.date) === monthKeyStr);
+      incomeData.push(monthInc.reduce((sum, i) => sum + (Number(i.amount) || 0), 0));
+      
+      // Expenses
+      const monthExp = monthExpenses.filter(e => monthKey(e.date) === monthKeyStr);
+      expenseData.push(monthExp.reduce((sum, e) => sum + (Number(e.amount) || 0), 0));
+      
+      // Savings (net of deposits - withdrawals)
+      const monthSavings = data.savings.filter(s => {
+        const sDate = new Date(s.date);
+        return sDate.getFullYear() === date.getFullYear() && sDate.getMonth() === date.getMonth();
+      });
+      const netSavings = monthSavings
+        .filter(s => s.type === 'deposit')
+        .reduce((sum, s) => sum + (Number(s.amount) || 0), 0) -
+        monthSavings
+        .filter(s => s.type === 'withdrawal')
+        .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+      savingsData.push(netSavings);
+      
+      // Debts (new debts added this month)
+      const monthDebts = data.debts.filter(d => monthKey(d.date) === monthKeyStr && d.status === 'unpaid');
+      debtData.push(monthDebts.reduce((sum, d) => sum + (Number(d.amount) || 0), 0));
+    }
+    
+    // Destroy previous instance
+    if (activityOverviewChartInstance) {
+      activityOverviewChartInstance.destroy();
+    }
+    
+    // Create colorful stacked bar chart
+    activityOverviewChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: 'Income',
+            data: incomeData,
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            stack: 'stack1'
+          },
+          {
+            label: 'Expenses',
+            data: expenseData,
+            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+            borderColor: 'rgba(239, 68, 68, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            stack: 'stack1'
+          },
+          {
+            label: 'Savings',
+            data: savingsData,
+            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            stack: 'stack2'
+          },
+          {
+            label: 'Debts',
+            data: debtData,
+            backgroundColor: 'rgba(245, 158, 11, 0.8)',
+            borderColor: 'rgba(245, 158, 11, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            stack: 'stack2'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+            titleFont: { size: 13, weight: '600' },
+            bodyFont: { size: 12 },
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y;
+                return ' ' + label + ': ' + fmtAmount(value);
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11, weight: '500' }, color: '#6B7280' }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
+            ticks: {
+              font: { size: 11 },
+              color: '#9CA3AF',
+              callback: function(value) {
+                if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                else if (value >= 1000) return '$' + (value / 1000).toFixed(1) + 'K';
+                return '$' + value;
+              }
+            }
+          }
+        },
+        elements: {
+          bar: { borderRadius: 4, borderSkipped: false }
+        }
+      }
+    });
+  }
 
   // Global search functionality
   $('globalSearch')?.addEventListener('input', () => {
