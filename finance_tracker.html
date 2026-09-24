@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -14,130 +14,148 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%2310B981'/%3E%3Ctext x='50' y='68' font-size='42' font-family='sans-serif' font-weight='700' fill='%23FFFFFF' text-anchor='middle'%3EBWZ%3C/text%3E%3C/svg%3E">
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22BWZ%20CORPORATION%20Finance%20Tracker%22%2C%22short_name%22%3A%22BWZ%20Finances%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%23F9FAFB%22%2C%22theme_color%22%3A%22%2310B981%22%7D">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root{
-    /* Modern Color Palette */
+    /* Modern Dark Financial Dashboard */
+    --bg-primary: #0f0f1a;
+    --bg-secondary: #1a1a2e;
+    --bg-card: #16213e;
+    --bg-elevated: #1f2947;
+    --bg-input: #0f0f1a;
+    --text-primary: #ffffff;
+    --text-secondary: #a0aec0;
+    --text-muted: #718096;
     --primary: #10B981;
     --primary-dark: #059669;
-    --primary-light: #D1FAE5;
-    --ink: #1F2937;
-    --ink-soft: #6B7280;
-    --ink-light: #9CA3AF;
-    --paper: #FFFFFF;
-    --background: #F9FAFB;
-    --background-alt: #F3F4F6;
-    --border: #E5E7EB;
-    --border-dark: #D1D5DB;
-    --error: #EF4444;
-    --error-light: #FEE2E2;
-    --good: #10B981;
-    --good-light: #D1FAE5;
+    --primary-bg: rgba(16, 185, 129, 0.15);
+    --secondary: #3B82F6;
+    --secondary-bg: rgba(59, 130, 246, 0.15);
+    --danger: #EF4444;
+    --danger-bg: rgba(239, 68, 68, 0.15);
     --warning: #F59E0B;
-    --warning-light: #FEF3C7;
-    
-    /* Typography */
-    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --warning-bg: rgba(245, 158, 11, 0.15);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-light: rgba(255, 255, 255, 0.12);
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --font-mono: 'SF Mono', 'Consolas', 'Courier New', monospace;
-    
-    /* Spacing */
-    --maxw: 1024px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    --transition-fast: 150ms ease-out;
+    --transition-normal: 250ms ease-out;
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
     --spacing-2xl: 48px;
-    
-    /* Border Radius */
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 20px;
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    
-    /* Transitions */
-    --transition-fast: 150ms ease-out;
-    --transition-normal: 250ms ease-out;
-    --transition-slow: 400ms ease-out;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   
   body{
-    font-family:var(--font-body); color:var(--ink); background:var(--background);
-    line-height:1.6; padding:var(--spacing-lg);
+    font-family:var(--font-family); color:var(--text-primary); background:var(--bg-primary);
+    line-height:1.6; padding:var(--spacing-xl);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height:100vh;
   }
   
   .wrap{
-    max-width:var(--maxw); margin:0 auto;
-    animation: fadeInUp 0.6s ease-out;
+    max-width:1280px; margin:0 auto;
+    padding:var(--spacing-xl);
+    animation: fadeIn 0.5s ease-out;
   }
   
   h1{
-    font-size:32px; font-weight:700; color:var(--ink); margin-bottom:var(--spacing-xs);
+    font-size:28px; font-weight:700; color:var(--text-primary); margin-bottom:var(--spacing-xs);
     letter-spacing: -0.02em;
   }
   
   .subtitle{
-    color:var(--ink-soft); font-size:16px; margin-bottom:var(--spacing-xl);
+    color:var(--text-secondary); font-size:14px; margin-bottom:var(--spacing-xl);
     line-height:1.5;
   }
   
   h2{
-    font-size:20px; font-weight:600; color:var(--ink); margin-bottom:var(--spacing-md);
-    letter-spacing: -0.01em;
+    font-size:18px; font-weight:600; color:var(--text-primary); margin-bottom:var(--spacing-md);
+  }
+  
+  h3{
+    font-size:13px; font-weight:600; color:var(--text-secondary);
+    text-transform:uppercase; letter-spacing:0.05em; margin-bottom:var(--spacing-sm);
   }
   .card{
-    background:var(--paper); border:1px solid var(--border); border-radius:var(--radius-lg);
-    padding:var(--spacing-lg); margin-bottom:var(--spacing-lg);
+    background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-lg);
+    padding:var(--spacing-lg); margin-bottom:var(--spacing-md);
     box-shadow:var(--shadow-sm);
-    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+    transition: all var(--transition-normal);
   }
   
   .card:hover{
+    border-color:var(--border-light);
     box-shadow:var(--shadow-md);
   }
   
   .grid-2{
-    display:grid; grid-template-columns:1fr 1fr; gap:var(--spacing-lg);
+    display:grid; grid-template-columns:repeat(2,1fr); gap:var(--spacing-lg);
+  }
+  .grid-3{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:var(--spacing-lg);
+  }
+  .grid-4{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:var(--spacing-lg);
   }
   
-  @media (max-width:700px){ 
-    .grid-2{grid-template-columns:1fr;} 
+  @media (max-width:1024px){
+    .grid-4{grid-template-columns:repeat(2,1fr);}
+    .grid-3{grid-template-columns:repeat(2,1fr);}
+  }
+  
+  @media (max-width:768px){
+    .grid-4,.grid-3,.grid-2{grid-template-columns:1fr;}
   }
 
   .field{margin-bottom:var(--spacing-md);}
   
   .field label{
-    display:block; font-size:13px; font-weight:600; color:var(--ink-soft); 
+    display:block; font-size:11px; font-weight:600; color:var(--text-secondary); 
     text-transform:uppercase; letter-spacing:0.05em; margin-bottom:var(--spacing-sm);
   }
   
   .field input, .field select{
-    width:100%; border:1px solid var(--border); border-radius:var(--radius-md); 
-    padding:12px 14px; font-size:15px; color:var(--ink); background:var(--paper); 
-    font-family:inherit; transition: border-color var(--transition-fast), 
-    box-shadow var(--transition-fast);
-  }
-  
-  .field input:focus, .field select:focus{
-    outline:none; border-color:var(--primary); 
-    box-shadow: 0 0 0 3px var(--primary-light);
+    width:100%; background:var(--bg-input); border:1px solid var(--border-color); 
+    border-radius:var(--radius-md); padding:12px 14px; font-size:14px; 
+    color:var(--text-primary); font-family:inherit; transition: all var(--transition-fast);
+    outline:none;
   }
   
   .field input::placeholder, .field select::placeholder{
-    color:var(--ink-light);
+    color:var(--text-muted);
   }
   
-  .field-row{display:flex; gap:var(--spacing-md);}
-  .field-row .field{flex:1;}
+  .field input:focus, .field select:focus{
+    border-color:var(--primary); 
+    box-shadow: 0 0 0 3px var(--primary-bg);
+  }
+  
+  .field select{
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a0aec0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    padding-right:36px;
+  }
+  
+  .field-row{display:flex; gap:var(--spacing-md); flex-wrap:wrap;}
+  .field-row .field{flex:1; min-width:200px;}
 
   .btn{
     font-weight:600; font-size:14px; padding:12px 20px; border-radius:var(--radius-md); 
@@ -265,6 +283,19 @@
     font-size:28px; font-weight:700; color:var(--ink); 
     font-family:var(--font-mono); letter-spacing: -0.02em;
   }
+  .stat-box .stat-num .stat-value{
+    display:block;
+  }
+  
+  /* Extra currencies of a mixed-currency total, e.g. "40 USD · 25 CDF" */
+  .stat-box .stat-num .stat-extra{
+    display:block; margin-top:2px; font-size:13px; font-weight:700;
+    color:var(--ink-soft); letter-spacing:0;
+  }
+  
+  .stat-box .stat-num .stat-extra:empty{
+    display:none;
+  }
   
   .stat-box .stat-label{
     font-size:13px; color:var(--ink-soft); margin-top:var(--spacing-sm);
@@ -334,6 +365,41 @@
   
   .fatal-banner.show{
     display:block;
+  }
+
+  /* Setup warning: a required database migration has not been applied yet. */
+  .setup-banner{
+    display:none; background:var(--warning-bg); border:1px solid var(--warning);
+    color:var(--ink); padding:var(--spacing-md) var(--spacing-lg);
+    border-radius:var(--radius-md); margin-bottom:var(--spacing-lg); font-size:14px;
+    line-height:1.5;
+  }
+
+  .setup-banner.show{
+    display:block;
+  }
+
+  .setup-banner h3{
+    margin:0 0 var(--spacing-sm) 0; font-size:15px; color:var(--warning); font-weight:700;
+  }
+
+  .setup-banner p{
+    margin:0 0 var(--spacing-sm) 0; color:var(--ink-soft);
+  }
+
+  .setup-banner pre{
+    background:var(--paper); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:var(--spacing-sm) var(--spacing-md); margin:0 0 var(--spacing-sm) 0;
+    overflow:auto; font-family:var(--font-mono); font-size:12px; color:var(--ink);
+    white-space:pre;
+  }
+
+  .setup-banner .setup-actions{
+    display:flex; gap:var(--spacing-sm); align-items:center; flex-wrap:wrap;
+  }
+
+  .setup-banner .setup-note{
+    font-size:12px; color:var(--ink-soft); margin:0;
   }
 
   /* ---------- auth screen ---------- */
@@ -529,6 +595,34 @@
     to { transform: rotate(360deg); }
   }
 
+  /* Banking Decorations */
+  @keyframes bankingGlow {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-5%, -5%) rotate(3deg); }
+  }
+  
+  @keyframes floatSymbol {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.03; }
+    25% { transform: translateY(-20px) rotate(5deg); opacity: 0.04; }
+    50% { transform: translateY(0) rotate(0deg); opacity: 0.03; }
+    75% { transform: translateY(20px) rotate(-5deg); opacity: 0.02; }
+  }
+  
+  @keyframes coinFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-5px) rotate(180deg); }
+  }
+  
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  
+  @keyframes particleFloat {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+    50% { transform: translateY(-100px) scale(1.5); opacity: 0.4; }
+  }
+
   /* ---------- Loading States ---------- */
   .skeleton {
     background: linear-gradient(90deg, var(--background-alt) 25%, var(--border) 50%, var(--background-alt) 75%);
@@ -705,9 +799,630 @@
     display: block;
     animation: fadeInUp 0.4s ease-out;
   }
+
+  /* Banking Background Decoration */
+  .banking-bg-decoration {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+  }
+  
+  .banking-bg-decoration::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.04) 0%, transparent 50%);
+    animation: bankingGlow 20s ease-in-out infinite alternate;
+  }
+  
+  .currency-deco {
+    position: absolute;
+    font-size: 70px;
+    font-weight: 800;
+    color: var(--primary);
+    opacity: 0.03;
+    font-family: var(--font-mono);
+    user-select: none;
+    pointer-events: none;
+    animation: floatSymbol 20s ease-in-out infinite;
+  }
+  
+  .currency-deco:nth-of-type(1) { top: 10%; left: 5%; animation-delay: 0s; }
+  .currency-deco:nth-of-type(2) { top: 25%; right: 10%; animation-delay: -3s; font-size: 90px; }
+  .currency-deco:nth-of-type(3) { bottom: 35%; left: 10%; animation-delay: -6s; font-size: 75px; color: var(--secondary); }
+  .currency-deco:nth-of-type(4) { bottom: 15%; right: 8%; animation-delay: -9s; font-size: 55px; }
+  .currency-deco:nth-of-type(5) { top: 45%; left: 25%; animation-delay: -12s; font-size: 85px; color: var(--warning); opacity: 0.02; }
+  
+  .grid-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  }
+  
+  .stat-icon-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: var(--primary-bg);
+    color: var(--primary);
+    font-size: 20px;
+    margin-bottom: var(--spacing-sm);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+  }
+  
+  .stat-icon-wrapper::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: calc(var(--radius-md) + 2px);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), transparent);
+    z-index: -1;
+  }
+  
+  .security-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--primary-bg);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: var(--radius-full);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  
+  .coin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--warning);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  
+  .coin-badge .coin-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--warning), #d97706);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  }
+  
+  .card-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 0 2px 2px 0;
+  }
+  
+  .terminal-deco {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    display: inline-block;
+  }
+  
+  .terminal-deco .cursor { animation: blink 1s step-end infinite; }
+  
+  .wave-decoration::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 40'%3E%3Cpath fill='%2310B981' fill-opacity='0.08' d='M0,20 L48,25 C96,30 192,35 288,35 C384,35 480,25 576,20 C672,15 768,15 864,20 C960,25 1056,35 1152,30 C1248,25 1344,15 1440,10 L1440,40 L0,40 Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+  }
+
+
+  /* Banking Elements Styles */
+  .banking-elements {
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .security-badges-row {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+  }
+  
+  .security-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--primary-bg);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: var(--radius-full);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  
+  .security-badge svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .security-badge:nth-child(2) {
+    background: var(--secondary-bg);
+    border-color: rgba(59, 130, 246, 0.25);
+    color: var(--secondary);
+  }
+  
+  .security-badge:nth-child(3) {
+    background: var(--warning-bg);
+    border-color: rgba(245, 158, 11, 0.25);
+    color: var(--warning);
+  }
+  
+  .exchange-ticker {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .ticker-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .ticker-label .ticker-base {
+    color: var(--border-color);
+  }
+  
+  .ticker-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
+  
+  /* Where the rates came from: live feed, saved copy, or bundled snapshot */
+  .fx-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary, var(--bg-secondary));
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+  }
+  
+  .fx-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  
+  .fx-status[data-state="live"] {
+    color: var(--primary);
+    background: var(--primary-bg);
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+  
+  .fx-status[data-state="cached"] {
+    color: var(--warning);
+    background: var(--warning-bg);
+    border-color: rgba(245, 158, 11, 0.25);
+  }
+  
+  .fx-status[data-state="offline"] {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+  
+  .fx-updated {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  
+  /* The currencies this app books in, marked so they stand out */
+  .currency-pair.is-book .currency-code {
+    color: var(--primary);
+  }
+  
+  .ticker-track {
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .ticker-content {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+  }
+  
+  .currency-pair {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    font-family: var(--font-mono);
+  }
+  
+  .currency-code {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+  
+  .currency-rate {
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+  
+  .currency-change {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .currency-change.positive {
+    color: var(--primary);
+    background: var(--primary-bg);
+  }
+  
+  .currency-change.negative {
+    color: var(--danger);
+    background: var(--danger-bg);
+  }
+  
+  .ticker-separator {
+    color: var(--border-color);
+    padding: 0 8px;
+    font-weight: 300;
+  }
+  
+  .bank-info-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    padding: 16px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+  }
+  
+  .bank-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .bank-logo-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+  
+  .bank-logo-text {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .bank-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.03em;
+  }
+  
+  .bank-subtitle {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  
+  .bank-details {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+  }
+  
+  .bank-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  
+  .bank-detail .detail-icon {
+    color: var(--primary);
+    opacity: 0.8;
+  }
+  
+  .bank-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+  }
+  
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--primary-bg);
+    border-radius: var(--radius-full);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .status-indicator .status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  .bank-stats {
+    display: flex;
+    gap: var(--spacing-xl);
+  }
+  
+  .bank-stat {
+    text-align: center;
+  }
+  
+  .bank-stat .stat-value {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+  }
+  
+  .bank-stat .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  @media (max-width: 1024px) {
+    .bank-info-bar {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .bank-details {
+      justify-content: center;
+    }
+    
+    .bank-status {
+      justify-content: center;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .security-badges-row {
+      gap: var(--spacing-xs);
+    }
+    
+    .security-badge {
+      padding: 4px 10px;
+      font-size: 10px;
+    }
+    
+    .exchange-ticker {
+      padding: 10px 12px;
+    }
+    
+    .currency-pair {
+      padding: 0 10px;
+    }
+    
+    .currency-code, .currency-rate {
+      font-size: 11px;
+    }
+    
+    .bank-logo-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 13px;
+    }
+    
+    .bank-name {
+      font-size: 14px;
+    }
+    
+    .bank-detail {
+      font-size: 11px;
+    }
+    
+    .bank-stats {
+      gap: var(--spacing-lg);
+    }
+    
+    .bank-stat .stat-value {
+      font-size: 14px;
+    }
+  }
+
 </style>
 </head>
 <body>
+
+  <!-- Banking Elements Container -->
+  <div class="banking-elements">
+    <!-- Security Badges Row -->
+    <div class="security-badges-row no-print">
+      <div class="security-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        SSL Secured
+      </div>
+      <div class="security-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        Data Encrypted
+      </div>
+      <div class="security-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+        Bank Grade Security
+      </div>
+    </div>
+
+    <!-- Currency Exchange Ticker -->
+    <div class="exchange-ticker no-print">
+      <div class="ticker-label">
+        <span>Exchange Rates <span class="ticker-base">/ 1 USD</span></span>
+        <span class="ticker-meta">
+          <span class="fx-status" id="fxStatus">Connecting…</span>
+          <span class="fx-updated" id="fxUpdated"></span>
+        </span>
+      </div>
+      <div class="ticker-track">
+        <div class="ticker-content">
+          <span class="currency-pair is-book">
+            <span class="currency-code">RWF</span>
+            <span class="currency-rate">loading...</span>
+          </span>
+        </div>
+        <noscript><span class="fx-updated">Live rates need JavaScript enabled.</span></noscript>
+      </div>
+    </div>
+
+    <!-- Bank Information Bar -->
+    <div class="bank-info-bar no-print">
+      <div class="bank-logo">
+        <div class="bank-logo-icon">BWZ</div>
+        <div class="bank-logo-text">
+          <div class="bank-name">BWZ CORPORATION</div>
+          <div class="bank-subtitle">Finance Division</div>
+        </div>
+      </div>
+      <div class="bank-details">
+        <div class="bank-detail">
+          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M3 21h18"/>
+            <path d="M5 21V7l8-4v18"/>
+            <path d="M19 21V11l-6-4"/>
+            <path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/>
+          </svg>
+          <span>SWIFT: BWZCRRWE</span>
+        </div>
+        <div class="bank-detail">
+          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span>HQ: Kigali, Rwanda</span>
+        </div>
+      </div>
+      <div class="bank-status">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-text">System Online</span>
+        </div>
+        <div class="bank-stats">
+          <div class="bank-stat">
+            <span class="stat-value" id="bankActiveUsers">1</span>
+            <span class="stat-label">Active Users</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
 <!-- ============ AUTH SCREEN ============ -->
 <div id="authScreen">
@@ -732,11 +1447,14 @@
 
   <div class="fatal-banner no-print" id="fatalBanner"></div>
 
+  <div class="setup-banner no-print" id="setupBanner" role="status" aria-live="polite"></div>
+
   <div class="sync-bar no-print">
     <div>
       <div class="sync-status connected" id="syncStatus">Synced with your account</div>
     </div>
     <div class="btn-row">
+      <input type="text" id="globalSearch" placeholder="Search transactions..." style="padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px; width: 200px; background: var(--paper);">
       <button class="btn btn-ghost btn-small" id="refreshBtn">Refresh</button>
       <button class="btn btn-ghost btn-small" id="exportBtn">Export backup (.json)</button>
       <button class="btn btn-ghost btn-small" id="importBtn">Import backup (.json)</button>
@@ -747,11 +1465,128 @@
 
   <!-- Tab Navigation -->
   <nav class="tab-nav no-print">
+    <button class="tab-btn" data-tab="dashboard">Dashboard</button>
     <button class="tab-btn active" data-tab="expenses">Expenses</button>
     <button class="tab-btn" data-tab="income">Income</button>
     <button class="tab-btn" data-tab="savings">Savings</button>
     <button class="tab-btn" data-tab="debts">Debts</button>
   </nav>
+
+  <!-- Dashboard Section -->
+  <div class="section-container" id="dashboardSection">
+    <h2 style="margin-bottom: var(--spacing-lg);">Financial Overview</h2>
+    
+    <!-- 🎨 ACTIVITY OVERVIEW CHART - Colorful Bar Chart -->
+    <div class="card" style="margin-bottom: var(--spacing-lg);">
+      <h3 style="margin-bottom: var(--spacing-md); font-size: 16px; color: var(--ink); display: flex; align-items: center; gap: 8px;">
+        <span>📈</span> Monthly Activity Overview
+      </h3>
+      <div style="position: relative; height: 200px;">
+        <canvas id="activityOverviewChart"></canvas>
+      </div>
+      <!-- Legend -->
+      <div style="display: flex; justify-content: center; gap: 24px; margin-top: 16px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft);">
+          <span style="width: 12px; height: 12px; background: linear-gradient(135deg, #10B981, #34D399); border-radius: 2px;"></span>
+          Income
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft);">
+          <span style="width: 12px; height: 12px; background: linear-gradient(135deg, #EF4444, #F87171); border-radius: 2px;"></span>
+          Expenses
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft);">
+          <span style="width: 12px; height: 12px; background: linear-gradient(135deg, #3B82F6, #60A5FA); border-radius: 2px;"></span>
+          Savings
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft);">
+          <span style="width: 12px; height: 12px; background: linear-gradient(135deg, #F59E0B, #FBBF24); border-radius: 2px;"></span>
+          Debts
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="dashTotalBalance">0</div>
+        <div class="stat-label">Total Balance</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashMonthlyIncome">0</div>
+        <div class="stat-label">Monthly Income</div>
+      </div>
+      <div class="stat-box warn">
+        <div class="stat-num" id="dashMonthlyExpenses">0</div>
+        <div class="stat-label">Monthly Expenses</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashNetCashFlow">0</div>
+        <div class="stat-label">Net Cash Flow</div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid-2" style="margin-bottom: var(--spacing-lg);">
+      <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Expenses by Category</h3>
+        <div style="position: relative; height: 250px;">
+          <canvas id="expenseCategoryChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Income vs Expenses (Monthly)</h3>
+        <div style="position: relative; height: 250px;">
+          <canvas id="incomeExpenseChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Recent Expenses</h3>
+        <div id="recentExpenses" style="max-height: 250px; overflow-y: auto;">
+          <table style="font-size: 13px;">
+            <thead>
+              <tr><th>Date</th><th>Category</th><th class="amount">Amount</th></tr>
+            </thead>
+            <tbody id="recentExpensesBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Recent Income</h3>
+        <div id="recentIncome" style="max-height: 250px; overflow-y: auto;">
+          <table style="font-size: 13px;">
+            <thead>
+              <tr><th>Date</th><th>Source</th><th class="amount">Amount</th></tr>
+            </thead>
+            <tbody id="recentIncomeBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row" style="margin-top: var(--spacing-lg);">
+      <div class="stat-box">
+        <div class="stat-num" id="dashTotalDebt">0</div>
+        <div class="stat-label">Total Debt</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashSavingsBalance">0</div>
+        <div class="stat-label">Savings Balance</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashSavingsRate">0%</div>
+        <div class="stat-label">Savings Rate</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="dashTransactionsCount">0</div>
+        <div class="stat-label">Total Transactions</div>
+      </div>
+    </div>
+  </div>
 
   <!-- Expenses Section -->
   <div class="section-container active" id="expensesSection">
@@ -790,10 +1625,31 @@
           <label for="expAmount">Amount</label>
           <input type="number" id="expAmount" min="0" step="any" placeholder="e.g. 5000">
         </div>
+        <div class="field">
+          <label for="expCurrency">Currency</label>
+          <select id="expCurrency">
+            <option value="RWF" selected>RWF (FRW)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CDF">CDF (FC)</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="expCategory">Category</label>
-        <input type="text" id="expCategory" placeholder="e.g. Food, Transport, Rent">
+        <select id="expCategory">
+          <option value="">Select category...</option>
+          <option value="Food & Dining">Food & Dining</option>
+          <option value="Transportation">Transportation</option>
+          <option value="Housing/Rent">Housing/Rent</option>
+          <option value="Utilities">Utilities</option>
+          <option value="Healthcare">Healthcare</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Education">Education</option>
+          <option value="Communication">Communication</option>
+          <option value="Subscriptions">Subscriptions</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div class="field">
         <label for="expDesc">Description (optional)</label>
@@ -849,15 +1705,27 @@
           <label for="incomeAmount">Amount</label>
           <input type="number" id="incomeAmount" min="0" step="any" placeholder="e.g. 5000">
         </div>
+        <div class="field">
+          <label for="incomeCurrency">Currency</label>
+          <select id="incomeCurrency">
+            <option value="RWF" selected>RWF (FRW)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CDF">CDF (FC)</option>
+          </select>
+        </div>
       </div>
       <div class="field-row">
         <div class="field">
           <label for="incomeCategory">Category</label>
           <select id="incomeCategory">
+            <option value="">Select category...</option>
             <option value="Salary">Salary</option>
             <option value="Freelance">Freelance</option>
-            <option value="Gift">Gift</option>
-            <option value="Investment">Investment</option>
+            <option value="Business">Business</option>
+            <option value="Investments">Investments</option>
+            <option value="Rental Income">Rental Income</option>
+            <option value="Gifts">Gifts</option>
+            <option value="Refunds">Refunds</option>
             <option value="Other">Other</option>
           </select>
         </div>
@@ -932,6 +1800,14 @@
           <label for="savingsAmount">Amount</label>
           <input type="number" id="savingsAmount" min="0" step="any" placeholder="e.g. 1000">
         </div>
+        <div class="field">
+          <label for="savingsCurrency">Currency</label>
+          <select id="savingsCurrency">
+            <option value="RWF" selected>RWF (FRW)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CDF">CDF (FC)</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="savingsReason">Reason <span id="reasonRequired" style="color:var(--error); font-size:11px;">(required for withdrawals)</span></label>
@@ -989,6 +1865,14 @@
           <label for="debtAmount">Amount</label>
           <input type="number" id="debtAmount" min="0" step="any" placeholder="e.g. 20000">
         </div>
+        <div class="field">
+          <label for="debtCurrency">Currency</label>
+          <select id="debtCurrency">
+            <option value="RWF" selected>RWF (FRW)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CDF">CDF (FC)</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="debtPerson">Owed to / from</label>
@@ -1034,6 +1918,316 @@
 
   const $ = (id) => document.getElementById(id);
 
+  /* ---------------------------------------------------------
+     Currency. New entries are logged in the Rwandan franc (FRW) unless the
+     user picks another currency in the form. Amounts in different currencies
+     are never added together: every total is shown once per currency, with
+     the account currency (FRW) leading.
+  --------------------------------------------------------- */
+  const DEFAULT_CURRENCY = 'RWF';
+
+  function currencyOf(row){
+    return (row && row.currency) ? row.currency : DEFAULT_CURRENCY;
+  }
+
+  /* The currency most of the money in these rows is expressed in. */
+  function dominantCurrency(rows){
+    const totals = {};
+    (rows || []).forEach(row => {
+      const code = currencyOf(row);
+      totals[code] = (totals[code] || 0) + (Number(row.amount) || 0);
+    });
+    const codes = Object.keys(totals);
+    if (!codes.length) return DEFAULT_CURRENCY;
+    return codes.sort((a, b) => totals[b] - totals[a])[0];
+  }
+
+  /* The currency the account is mostly kept in (used for chart axes). */
+  function accountCurrency(){
+    return dominantCurrency(data.expenses.concat(data.income, data.savings, data.debts));
+  }
+
+  /* The currencies the tracker books in, FRW (the data currency) first. */
+  const CURRENCY_ORDER = ['RWF', 'USD', 'CDF'];
+
+  /* Add rows up per currency, e.g. { RWF: 150000, USD: 40 }.
+     Rows in different currencies are never added together. */
+  function sumByCurrency(rows){
+    const buckets = {};
+    (rows || []).forEach(row => {
+      const code = currencyOf(row);
+      buckets[code] = (buckets[code] || 0) + (Number(row.amount) || 0);
+    });
+    return buckets;
+  }
+
+  /* Rows booked in one currency. Chart datasets plot a single currency at a
+     time, otherwise the bars would add FRW to USD as if they were the same. */
+  function rowsInCurrency(rows, code){
+    const target = code || DEFAULT_CURRENCY;
+    return (rows || []).filter(row => currencyOf(row) === target);
+  }
+
+  /* Combine two per-currency maps; sign -1 subtracts the second one. */
+  function addBuckets(base, extra, sign){
+    const out = Object.assign({}, base || {});
+    Object.keys(extra || {}).forEach(code => {
+      out[code] = (out[code] || 0) + (sign === -1 ? -1 : 1) * (Number(extra[code]) || 0);
+    });
+    return out;
+  }
+
+  /* Net of one set of rows minus another (income minus expenses, deposits
+     minus withdrawals), kept per currency. */
+  function netByCurrency(positiveRows, negativeRows){
+    return addBuckets(sumByCurrency(positiveRows), sumByCurrency(negativeRows), -1);
+  }
+
+  /* Bucket keys in display order, the account currency first. */
+  function bucketCurrencies(buckets){
+    const codes = Object.keys(buckets || {});
+    const rank = code => {
+      const i = CURRENCY_ORDER.indexOf(code);
+      return i === -1 ? CURRENCY_ORDER.length : i;
+    };
+    codes.sort((a, b) => rank(a) - rank(b));
+    if (codes.length > 1) {
+      const i = codes.indexOf(DEFAULT_CURRENCY);
+      if (i > 0) codes.splice(0, 0, codes.splice(i, 1)[0]);
+    }
+    return codes;
+  }
+
+  /* The headline figure of a bucket map: the account currency when it is
+     present, otherwise the largest amount. Used for colour coding and for
+     the percentages, which must be worked out inside one currency. */
+  function leadAmount(buckets){
+    const codes = bucketCurrencies(buckets);
+    return codes.length ? (Number(buckets[codes[0]]) || 0) : 0;
+  }
+
+  /* Show a money stat. `value` is either a single amount plus its currency,
+     or a { currency: amount } map — in which case the leading currency is
+     animated as the big figure and every other currency is listed underneath,
+     so FRW, USD and CDF totals are never mixed into one number. */
+  function setMoneyStat(element, value, currency){
+    if (!element) return;
+
+    const buckets = (value && typeof value === 'object' && !Array.isArray(value))
+      ? Object.assign({}, value)
+      : { [(currency || DEFAULT_CURRENCY)]: Number(value) || 0 };
+
+    let codes = bucketCurrencies(buckets);
+    if (!codes.length) { codes = [DEFAULT_CURRENCY]; buckets[DEFAULT_CURRENCY] = 0; }
+
+    let main = element.querySelector('.stat-value');
+    if (!main) {
+      element.textContent = '';
+      main = document.createElement('span');
+      main.className = 'stat-value';
+      element.appendChild(main);
+    }
+    let extra = element.querySelector('.stat-extra');
+    if (!extra) {
+      extra = document.createElement('span');
+      extra.className = 'stat-extra';
+      element.appendChild(extra);
+    }
+
+    element.dataset.currency = codes[0];
+    element.dataset.currencies = codes.join(',');
+    main.dataset.currency = codes[0];
+    animateNumber(main, Number(buckets[codes[0]]) || 0);
+
+    extra.textContent = codes.slice(1)
+      .map(code => fmtAmount(buckets[code]) + ' ' + code)
+      .join(' · ');
+  }
+
+  /* ---------------------------------------------------------
+     Currency storage. The `currency` column is optional in the schema. When a
+     database has not been migrated yet the picked currency cannot be stored in
+     the row, so this browser keeps it next to the saved row's id and the app
+     points the user at the migration.
+  --------------------------------------------------------- */
+  const CURRENCY_BRIDGE_KEY = 'bwzRowCurrency:v1';
+  let currencyColumnMissing = false;
+
+  const CURRENCY_COLUMN_SQL =
+    'alter table public.expenses add column if not exists currency text not null default \'RWF\';\n' +
+    'alter table public.debts    add column if not exists currency text not null default \'RWF\';\n' +
+    'alter table public.income   add column if not exists currency text not null default \'RWF\';\n' +
+    'alter table public.savings  add column if not exists currency text not null default \'RWF\';';
+
+  function bridgeMap(){
+    try { return JSON.parse(localStorage.getItem(CURRENCY_BRIDGE_KEY) || '{}') || {}; }
+    catch (_) { return {}; }
+  }
+
+  /* Remember which currency a row was saved in, keyed by table and row id. */
+  function rememberCurrency(table, id, code){
+    if (id === undefined || id === null || !code) return;
+    try {
+      const map = bridgeMap();
+      map[table + ':' + id] = code;
+      localStorage.setItem(CURRENCY_BRIDGE_KEY, JSON.stringify(map));
+    } catch (_) { /* storage unavailable — the database column is the real home */ }
+  }
+
+  function rememberedCurrency(table, id){
+    if (id === undefined || id === null) return null;
+    return bridgeMap()[table + ':' + id] || null;
+  }
+
+  /* The currency a loaded row is shown in: what the database stored, then what
+     this browser remembers, then the FRW default.
+
+     A row saved before the `currency` column existed was backfilled to the
+     default by the migration, so when the database holds nothing but that
+     default while this browser remembers a deliberate pick, the remembered
+     value is the truth we should show. Row ids are unique per table, so a
+     remembered entry can only ever belong to the row it was saved with. */
+  function currencyForDbRow(table, row){
+    const stored = (row && row.currency) ? row.currency : null;
+    const remembered = rememberedCurrency(table, row && row.id);
+    if (remembered && (!stored || (stored === DEFAULT_CURRENCY && remembered !== DEFAULT_CURRENCY))) {
+      return remembered;
+    }
+    return stored || remembered || DEFAULT_CURRENCY;
+  }
+
+  /* Tell the user, once and clearly, that the database is missing the column
+     and exactly how to add it. */
+  function showSetupBanner(){
+    const banner = $('setupBanner');
+    if (!banner || banner.dataset.shown === '1') return;
+    banner.dataset.shown = '1';
+    banner.innerHTML =
+      '<h3>Currency storage needs a one-time database update</h3>' +
+      '<p>Your entries are saving, but this database has no <code>currency</code> column yet, ' +
+      'so a CDF or USD entry reloads as FRW. Run this once in the Supabase SQL editor, ' +
+      'then press Refresh — nothing else needs to change:</p>' +
+      '<pre id="setupSql"></pre>' +
+      '<div class="setup-actions">' +
+        '<button class="btn btn-primary btn-small" id="setupCopyBtn" type="button">Copy SQL</button>' +
+        '<button class="btn btn-ghost btn-small" id="setupDismissBtn" type="button">Dismiss</button>' +
+        '<p class="setup-note">Until then this browser remembers the currency you picked, ' +
+        'so your CDF and USD entries still show correctly here.</p>' +
+      '</div>';
+    const pre = $('setupSql');
+    if (pre) pre.textContent = CURRENCY_COLUMN_SQL;
+    const copy = $('setupCopyBtn');
+    if (copy) copy.addEventListener('click', () => copyText(CURRENCY_COLUMN_SQL, copy));
+    const dismiss = $('setupDismissBtn');
+    if (dismiss) dismiss.addEventListener('click', () => banner.classList.remove('show'));
+    banner.classList.add('show');
+  }
+
+  function copyText(text, button){
+    const done = () => {
+      if (!button) return;
+      button.textContent = 'Copied';
+      setTimeout(() => { button.textContent = 'Copy SQL'; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done){
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); done(); }
+    catch (_) { showToast('Copy the SQL from the banner by hand.'); }
+    document.body.removeChild(area);
+  }
+
+  async function insertRow(table, row){
+    const saved = await sb.from(table).insert(row).select('*');
+    if (!saved.error) {
+      const persisted = Array.isArray(saved.data) ? saved.data[0] : saved.data;
+      if (persisted && persisted.id !== undefined) rememberCurrency(table, persisted.id, row.currency);
+      return { error: null };
+    }
+
+    if (/currency/i.test(saved.error.message || '')) {
+      currencyColumnMissing = true;
+      showSetupBanner();
+      const withoutCurrency = Object.assign({}, row);
+      delete withoutCurrency.currency;
+      const retry = await sb.from(table).insert(withoutCurrency).select('*');
+      if (retry.error) return { error: retry.error };
+      const persisted = Array.isArray(retry.data) ? retry.data[0] : retry.data;
+      if (persisted && persisted.id !== undefined) rememberCurrency(table, persisted.id, row.currency);
+      return { error: null };
+    }
+    return { error: saved.error };
+  }
+
+  /* Bulk variant of insertRow(), used by the backup import: saves every row and
+     remembers each currency by the id Supabase returns. */
+  async function insertRows(table, rows){
+    const saved = await sb.from(table).insert(rows).select('*');
+    if (!saved.error) {
+      rememberCurrencies(table, rows, saved.data);
+      return { error: null };
+    }
+
+    if (/currency/i.test(saved.error.message || '')) {
+      currencyColumnMissing = true;
+      showSetupBanner();
+      const stripped = rows.map(r => {
+        const copy = Object.assign({}, r);
+        delete copy.currency;
+        return copy;
+      });
+      const retry = await sb.from(table).insert(stripped).select('*');
+      if (retry.error) return { error: retry.error };
+      rememberCurrencies(table, rows, retry.data);
+      return { error: null };
+    }
+    return { error: saved.error };
+  }
+
+  /* Supabase returns inserted rows in the order they were sent, so index i of
+     the response belongs to rows[i]. */
+  function rememberCurrencies(table, rows, persisted){
+    if (!Array.isArray(persisted)) return;
+    persisted.forEach((row, i) => {
+      if (row && row.id !== undefined && rows[i]) rememberCurrency(table, row.id, rows[i].currency);
+    });
+  }
+
+  function forgetCurrency(table, id){
+    if (id === undefined || id === null) return;
+    try {
+      const map = bridgeMap();
+      delete map[table + ':' + id];
+      localStorage.setItem(CURRENCY_BRIDGE_KEY, JSON.stringify(map));
+    } catch (_) { /* nothing to clean up */ }
+  }
+
+  /* Ask Supabase whether the optional column exists yet (a missing column is
+     reported before row-level security is applied, so this needs no sign-in). */
+  async function probeCurrencyColumn(){
+    try {
+      const { error } = await sb.from('expenses').select('currency').limit(1);
+      if (error && /currency/i.test(error.message || '')) {
+        currencyColumnMissing = true;
+        showSetupBanner();
+      } else if (!error) {
+        currencyColumnMissing = false;
+      }
+    } catch (_) { /* offline: try again on the next load */ }
+  }
+
   function todayISO(){
     const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -1055,7 +2249,8 @@
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
       const currentValue = startValue + (targetValue - startValue) * easeOutQuart;
       
-      element.textContent = fmtAmount(currentValue);
+      const currencySuffix = (element.dataset && element.dataset.currency) ? ' ' + element.dataset.currency : '';
+      element.textContent = fmtAmount(currentValue) + currencySuffix;
       
       if (progress < 1) {
         requestAnimationFrame(update);
@@ -1122,7 +2317,9 @@
     }
     
     // Re-render relevant data
-    if (tabName === 'expenses') {
+    if (tabName === 'dashboard') {
+      renderDashboard();
+    } else if (tabName === 'expenses') {
       renderExpenses();
     } else if (tabName === 'income') {
       renderIncome();
@@ -1171,23 +2368,29 @@
     } else {
       currentUserId = null;
       if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+      // Clear the previous account's data on sign-out.
+      data = { expenses: [], debts: [], income: [], savings: [] };
+      updateBankStatus();
       $('authScreen').style.display = 'block';
       $('appScreen').style.display = 'none';
     }
   });
 
   /* ---------- data mapping (DB snake_case <-> app camelCase) ---------- */
+  // A row is shown in the currency the database stored for it; rows saved before
+  // currencies existed (or while the optional column was still missing) fall back
+  // to what this browser remembered for that row, and finally to FRW.
   function mapExpenseFromDb(row){
-    return { id: row.id, date: row.date, category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0 };
+    return { id: row.id, date: row.date, category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0, currency: currencyForDbRow('expenses', row) };
   }
   function mapDebtFromDb(row){
-    return { id: row.id, date: row.date, person: row.person || '', description: row.description || '', amount: Number(row.amount) || 0, status: row.status === 'paid' ? 'paid' : 'unpaid', paidDate: row.paid_date || null };
+    return { id: row.id, date: row.date, person: row.person || '', description: row.description || '', amount: Number(row.amount) || 0, status: row.status === 'paid' ? 'paid' : 'unpaid', paidDate: row.paid_date || null, currency: currencyForDbRow('debts', row) };
   }
   function mapIncomeFromDb(row){
-    return { id: row.id, title: row.title || '', category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0, date: row.date };
+    return { id: row.id, title: row.title || '', category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0, date: row.date, currency: currencyForDbRow('income', row) };
   }
   function mapSavingsFromDb(row){
-    return { id: row.id, type: row.type || 'deposit', amount: Number(row.amount) || 0, reason: row.reason || '', date: row.date };
+    return { id: row.id, type: row.type || 'deposit', amount: Number(row.amount) || 0, reason: row.reason || '', date: row.date, currency: currencyForDbRow('savings', row) };
   }
 
   /* ---------- fetch from Supabase ---------- */
@@ -1197,6 +2400,8 @@
       
       // Fetch all data including new tables
       const [expRes, debtRes, incomeRes, savingsRes] = await Promise.all([
+        // select('*') keeps the row ids (needed by the delete / mark-paid buttons)
+        // and picks up the `currency` column automatically once it exists.
         sb.from('expenses').select('*').order('date', { ascending: true }),
         sb.from('debts').select('*').order('date', { ascending: true }),
         sb.from('income').select('*').order('date', { ascending: true }),
@@ -1281,8 +2486,9 @@
             category: e.category || '',
             description: e.description || '',
             amount: Number(e.amount) || 0,
+            currency: e.currency || DEFAULT_CURRENCY,
           }));
-          const { error } = await sb.from('expenses').insert(rows);
+          const { error } = await insertRows('expenses', rows);
           if (error) throw error;
         }
         if (debts.length) {
@@ -1293,8 +2499,9 @@
             amount: Number(d.amount) || 0,
             status: d.status === 'paid' ? 'paid' : 'unpaid',
             paid_date: d.paidDate || null,
+            currency: d.currency || DEFAULT_CURRENCY,
           }));
-          const { error } = await sb.from('debts').insert(rows);
+          const { error } = await insertRows('debts', rows);
           if (error) throw error;
         }
         if (income.length) {
@@ -1304,8 +2511,9 @@
             description: i.description || '',
             amount: Number(i.amount) || 0,
             date: typeof i.date === 'string' && i.date ? i.date : todayISO(),
+            currency: i.currency || DEFAULT_CURRENCY,
           }));
-          const { error } = await sb.from('income').insert(rows);
+          const { error } = await insertRows('income', rows);
           if (error) throw error;
         }
         if (savings.length) {
@@ -1314,8 +2522,9 @@
             amount: Number(s.amount) || 0,
             reason: s.reason || '',
             date: s.date || new Date().toISOString(),
+            currency: s.currency || DEFAULT_CURRENCY,
           }));
-          const { error } = await sb.from('savings').insert(rows);
+          const { error } = await insertRows('savings', rows);
           if (error) throw error;
         }
         showToast('Import complete.');
@@ -1377,9 +2586,20 @@
   function renderExpenses(){
     const selectedMonth = $('monthPicker').value || monthKey(todayISO());
     $('expenseMonthLabel').textContent = monthLabel(selectedMonth);
-    const rows = data.expenses
+    let rows = data.expenses
       .filter(e => monthKey(e.date) === selectedMonth)
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+    // Apply search filter
+    const searchTerm = $('globalSearch')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      rows = rows.filter(e => 
+        (e.category || '').toLowerCase().includes(searchTerm) ||
+        (e.description || '').toLowerCase().includes(searchTerm) ||
+        (e.date || '').includes(searchTerm) ||
+        String(e.amount).includes(searchTerm)
+      );
+    }
 
     const tbody = $('expenseTableBody');
     tbody.innerHTML = '';
@@ -1393,22 +2613,36 @@
           '<td>' + escapeHtml(e.date) + '</td>' +
           '<td>' + escapeHtml(e.category || '—') + '</td>' +
           '<td>' + escapeHtml(e.description || '') + '</td>' +
-          '<td class="amount">' + fmtAmount(e.amount) + '</td>' +
+          '<td class="amount">' + fmtAmount(e.amount) + ' ' + currencyOf(e) + '</td>' +
           '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-expense="' + e.id + '" aria-label="Remove expense: ' + escapeHtml(e.description || e.category || e.date) + '">Remove</button></td>';
         tbody.appendChild(tr);
       });
     }
 
-    const total = rows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    animateNumber($('statTotalExpense'), total);
+    setMoneyStat($('statTotalExpense'), sumByCurrency(rows));
   }
 
   function renderDebts(){
-    const rows = data.debts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    let rows = data.debts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    
+    // Apply search filter
+    const searchTerm = $('globalSearch')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      rows = rows.filter(d => 
+        (d.person || '').toLowerCase().includes(searchTerm) ||
+        (d.description || '').toLowerCase().includes(searchTerm) ||
+        (d.date || '').includes(searchTerm) ||
+        String(d.amount).includes(searchTerm) ||
+        (d.status || '').toLowerCase().includes(searchTerm)
+      );
+    }
+    
     const tbody = $('debtTableBody');
     tbody.innerHTML = '';
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No debts recorded yet.</td></tr>';
+      tbody.innerHTML = searchTerm
+        ? '<tr class="empty-row"><td colspan="6">No debts match your search.</td></tr>'
+        : '<tr class="empty-row"><td colspan="6">No debts recorded yet.</td></tr>';
     } else {
       rows.forEach((d, index) => {
         const tr = document.createElement('tr');
@@ -1418,7 +2652,7 @@
           '<td>' + escapeHtml(d.date || '') + '</td>' +
           '<td>' + escapeHtml(d.person || '') + '</td>' +
           '<td>' + escapeHtml(d.description || '') + '</td>' +
-          '<td class="amount">' + fmtAmount(d.amount) + '</td>' +
+          '<td class="amount">' + fmtAmount(d.amount) + ' ' + currencyOf(d) + '</td>' +
           '<td><span class="status-pill ' + d.status + '">' + d.status + '</span></td>' +
           '<td class="no-print">' +
             (d.status === 'unpaid'
@@ -1430,10 +2664,11 @@
       });
     }
 
-    const unpaidTotal = data.debts.filter(d => d.status === 'unpaid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
-    const paidTotal = data.debts.filter(d => d.status === 'paid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
-    animateNumber($('statUnpaidDebt'), unpaidTotal);
-    animateNumber($('statPaidDebt'), paidTotal);
+    // Totals are kept per currency so FRW, USD and CDF are never merged
+    const unpaidRows = data.debts.filter(d => d.status === 'unpaid');
+    const paidRows = data.debts.filter(d => d.status === 'paid');
+    setMoneyStat($('statUnpaidDebt'), sumByCurrency(unpaidRows));
+    setMoneyStat($('statPaidDebt'), sumByCurrency(paidRows));
   }
 
   function renderIncome(){
@@ -1445,12 +2680,24 @@
     
     let rows = data.income
       .filter(i => monthKey(i.date) === selectedMonth);
-    
+
     // Apply category filter
     if (categoryFilter !== 'all') {
       rows = rows.filter(i => i.category === categoryFilter);
     }
-    
+
+    // Apply search filter
+    const searchTerm = $('globalSearch')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      rows = rows.filter(i => 
+        (i.title || '').toLowerCase().includes(searchTerm) ||
+        (i.category || '').toLowerCase().includes(searchTerm) ||
+        (i.description || '').toLowerCase().includes(searchTerm) ||
+        (i.date || '').includes(searchTerm) ||
+        String(i.amount).includes(searchTerm)
+      );
+    }
+
     // Sort by date (newest first)
     rows = rows.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
@@ -1472,19 +2719,19 @@
           '<td>' + escapeHtml(i.title) + '</td>' +
           '<td><span class="status-pill paid">' + escapeHtml(i.category) + '</span></td>' +
           '<td>' + escapeHtml(i.description || '') + '</td>' +
-          '<td class="amount">' + fmtAmount(i.amount) + '</td>' +
+          '<td class="amount">' + fmtAmount(i.amount) + ' ' + currencyOf(i) + '</td>' +
           '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-income="' + i.id + '" aria-label="Remove income: ' + escapeHtml(i.title) + '">Remove</button></td>';
         tbody.appendChild(tr);
       });
     }
 
-    // Calculate totals
+    // Calculate totals, one figure per currency (never merged together)
     const monthIncome = data.income.filter(i => monthKey(i.date) === selectedMonth);
-    const total = monthIncome.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    const totalBuckets = sumByCurrency(monthIncome);
     
-    const categoryTotal = categoryFilter === 'all' 
-      ? total 
-      : monthIncome.filter(i => i.category === categoryFilter).reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    const categoryBuckets = categoryFilter === 'all' 
+      ? totalBuckets 
+      : sumByCurrency(monthIncome.filter(i => i.category === categoryFilter));
     
     // Count unique income sources (categories)
     const uniqueCategories = new Set(monthIncome.map(i => i.category));
@@ -1494,8 +2741,8 @@
     const statIncomeByCategory = $('statIncomeByCategory');
     const statIncomeSources = $('statIncomeSources');
     
-    if (statIncomeTotal) animateNumber(statIncomeTotal, total);
-    if (statIncomeByCategory) animateNumber(statIncomeByCategory, categoryTotal);
+    if (statIncomeTotal) setMoneyStat(statIncomeTotal, totalBuckets);
+    if (statIncomeByCategory) setMoneyStat(statIncomeByCategory, categoryBuckets);
     if (statIncomeSources) statIncomeSources.textContent = incomeSources;
   }
 
@@ -1507,6 +2754,17 @@
     // Apply type filter
     if (typeFilter !== 'all') {
       rows = rows.filter(s => s.type === typeFilter);
+    }
+
+    // Apply search filter
+    const searchTerm = $('globalSearch')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      rows = rows.filter(s => 
+        (s.reason || '').toLowerCase().includes(searchTerm) ||
+        (s.type || '').toLowerCase().includes(searchTerm) ||
+        (s.date || '').includes(searchTerm) ||
+        String(s.amount).includes(searchTerm)
+      );
     }
     
     // Sort by date (most recent first)
@@ -1533,21 +2791,25 @@
         tr.innerHTML =
           '<td>' + escapeHtml(new Date(s.date).toLocaleString()) + '</td>' +
           '<td><span class="' + typeClass + '">' + (isDeposit ? 'Deposit' : 'Withdrawal') + '</span></td>' +
-          '<td class="amount ' + amountClass + '">' + amountPrefix + fmtAmount(s.amount) + '</td>' +
+          '<td class="amount ' + amountClass + '">' + amountPrefix + fmtAmount(s.amount) + ' ' + currencyOf(s) + '</td>' +
           '<td>' + escapeHtml(s.reason) + '</td>' +
           '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-savings="' + s.id + '" aria-label="Remove savings: ' + escapeHtml(s.reason) + '">Remove</button></td>';
         tbody.appendChild(tr);
       });
     }
 
-    // Calculate totals (always show overall stats, not filtered)
-    const totalDeposits = data.savings.filter(s => s.type === 'deposit').reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
-    const totalWithdrawals = data.savings.filter(s => s.type === 'withdrawal').reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
-    const balance = totalDeposits - totalWithdrawals;
+    // Calculate totals, one figure per currency (never merged together)
+    const depositRows = data.savings.filter(s => s.type === 'deposit');
+    const withdrawalRows = data.savings.filter(s => s.type === 'withdrawal');
+    const depositBuckets = sumByCurrency(depositRows);
+    const withdrawalBuckets = sumByCurrency(withdrawalRows);
+    const balanceBuckets = addBuckets(depositBuckets, withdrawalBuckets, -1);
     
-    // Calculate savings growth (deposit ratio)
-    const totalMovements = totalDeposits + totalWithdrawals;
-    const savingsGrowth = totalMovements > 0 ? ((totalDeposits / totalMovements) * 100).toFixed(1) : 0;
+    // Calculate savings growth (deposit ratio, compared inside one currency)
+    const depositLead = leadAmount(depositBuckets);
+    const withdrawalLead = leadAmount(withdrawalBuckets);
+    const totalMovements = depositLead + withdrawalLead;
+    const savingsGrowth = totalMovements > 0 ? ((depositLead / totalMovements) * 100).toFixed(1) : 0;
     
     const statSavingsBalance = $('statSavingsBalance');
     const statTotalDeposits = $('statTotalDeposits');
@@ -1555,16 +2817,24 @@
     const statSavingsGrowth = $('statSavingsGrowth');
     
     if (statSavingsBalance) {
-      animateNumber(statSavingsBalance, balance);
+      setMoneyStat(statSavingsBalance, balanceBuckets);
       // Color code balance
-      statSavingsBalance.style.color = balance >= 0 ? 'var(--ink)' : 'var(--error)';
+      statSavingsBalance.style.color = leadAmount(balanceBuckets) >= 0 ? 'var(--ink)' : 'var(--error)';
     }
-    if (statTotalDeposits) animateNumber(statTotalDeposits, totalDeposits);
-    if (statTotalWithdrawals) animateNumber(statTotalWithdrawals, totalWithdrawals);
+    if (statTotalDeposits) setMoneyStat(statTotalDeposits, depositBuckets);
+    if (statTotalWithdrawals) setMoneyStat(statTotalWithdrawals, withdrawalBuckets);
     if (statSavingsGrowth) {
       statSavingsGrowth.textContent = savingsGrowth + '%';
       statSavingsGrowth.style.color = savingsGrowth >= 50 ? 'var(--good)' : 'var(--warning)';
     }
+  }
+
+  // Status strip: the configured number of accounts using this tracker.
+  const ACTIVE_USER_ACCOUNTS = 1;
+
+  function updateBankStatus(){
+    const users = $('bankActiveUsers');
+    if (users) users.textContent = fmtAmount(ACTIVE_USER_ACCOUNTS);
   }
 
   function renderAll(){
@@ -1585,6 +2855,9 @@
       
       // Always update stats for the current view
       updateStats();
+
+      // Keep the public status strip in step with the data that was just loaded
+      updateBankStatus();
     } catch (e) {
       console.error('Render failed:', e);
       showFatal('Something went wrong displaying your data. Try Refresh — your data in Supabase is untouched.');
@@ -1598,9 +2871,12 @@
       const monthExpenses = data.expenses.filter(e => monthKey(e.date) === selectedMonth);
       const monthIncome = data.income.filter(i => monthKey(i.date) === selectedMonth);
       
-      const totalExpense = monthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-      const totalIncome = monthIncome.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-      const netSavings = totalIncome - totalExpense;
+      const expenseBuckets = sumByCurrency(monthExpenses);
+      const incomeBuckets = sumByCurrency(monthIncome);
+      const netBuckets = addBuckets(incomeBuckets, expenseBuckets, -1);
+      // The rate is a ratio, so it is worked out inside one currency
+      const totalIncome = leadAmount(incomeBuckets);
+      const netSavings = leadAmount(netBuckets);
       const savingsRate = totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0;
       
       const statTotalExpense = $('statTotalExpense');
@@ -1608,10 +2884,10 @@
       const statNetSavings = $('statNetSavings');
       const statSavingsRate = $('statSavingsRate');
       
-      if (statTotalExpense) animateNumber(statTotalExpense, totalExpense);
-      if (statTotalIncome) animateNumber(statTotalIncome, totalIncome);
+      if (statTotalExpense) setMoneyStat(statTotalExpense, expenseBuckets);
+      if (statTotalIncome) setMoneyStat(statTotalIncome, incomeBuckets);
       if (statNetSavings) {
-        animateNumber(statNetSavings, netSavings);
+        setMoneyStat(statNetSavings, netBuckets);
         statNetSavings.style.color = netSavings >= 0 ? 'var(--ink)' : 'var(--error)';
       }
       if (statSavingsRate) {
@@ -1619,15 +2895,267 @@
         statSavingsRate.style.color = savingsRate >= 0 ? 'var(--good)' : 'var(--error)';
       }
     } else if (currentTab === 'debts') {
-      const unpaidTotal = data.debts.filter(d => d.status === 'unpaid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
-      const paidTotal = data.debts.filter(d => d.status === 'paid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
+      const unpaidBuckets = sumByCurrency(data.debts.filter(d => d.status === 'unpaid'));
+      const paidBuckets = sumByCurrency(data.debts.filter(d => d.status === 'paid'));
       
       const statUnpaidDebt = $('statUnpaidDebt');
       const statPaidDebt = $('statPaidDebt');
       
-      if (statUnpaidDebt) animateNumber(statUnpaidDebt, unpaidTotal);
-      if (statPaidDebt) animateNumber(statPaidDebt, paidTotal);
+      if (statUnpaidDebt) setMoneyStat(statUnpaidDebt, unpaidBuckets);
+      if (statPaidDebt) setMoneyStat(statPaidDebt, paidBuckets);
     }
+  }
+
+  /* ---------- dashboard rendering ---------- */
+  function renderDashboard() {
+    const currentMonth = monthKey(todayISO());
+    
+    // Calculate current month income and expenses
+    const monthExpenses = data.expenses.filter(e => monthKey(e.date) === currentMonth);
+    const monthIncome = data.income.filter(i => monthKey(i.date) === currentMonth);
+    
+    const expenseBuckets = sumByCurrency(monthExpenses);
+    const incomeBuckets = sumByCurrency(monthIncome);
+    const netBuckets = addBuckets(incomeBuckets, expenseBuckets, -1);
+    
+    // Calculate total debt and savings, per currency
+    const debtBuckets = sumByCurrency(data.debts.filter(d => d.status === 'unpaid'));
+    const savingsBuckets = netByCurrency(
+      data.savings.filter(s => s.type === 'deposit'),
+      data.savings.filter(s => s.type === 'withdrawal')
+    );
+    
+    // Calculate savings rate (a ratio, so compared inside one currency)
+    const totalMonthIncome = leadAmount(incomeBuckets);
+    const totalMonthExpenses = leadAmount(expenseBuckets);
+    const savingsRate = totalMonthIncome > 0 ? ((totalMonthIncome - totalMonthExpenses) / totalMonthIncome * 100).toFixed(1) : 0;
+    
+    // Total transactions count
+    const totalTransactions = data.expenses.length + data.income.length + data.savings.length + data.debts.length;
+    
+    // Update dashboard stats
+    setMoneyStat($('dashMonthlyIncome'), incomeBuckets);
+    setMoneyStat($('dashMonthlyExpenses'), expenseBuckets);
+    
+    const dashNetCashFlow = $('dashNetCashFlow');
+    if (dashNetCashFlow) {
+      setMoneyStat(dashNetCashFlow, netBuckets);
+      dashNetCashFlow.style.color = leadAmount(netBuckets) >= 0 ? 'var(--good)' : 'var(--error)';
+    }
+    
+    const dashTotalDebt = $('dashTotalDebt');
+    if (dashTotalDebt) setMoneyStat(dashTotalDebt, debtBuckets);
+    
+    const dashSavingsBalance = $('dashSavingsBalance');
+    if (dashSavingsBalance) {
+      setMoneyStat(dashSavingsBalance, savingsBuckets);
+      dashSavingsBalance.style.color = leadAmount(savingsBuckets) >= 0 ? 'var(--ink)' : 'var(--error)';
+    }
+    
+    const dashSavingsRate = $('dashSavingsRate');
+    if (dashSavingsRate) {
+      dashSavingsRate.textContent = savingsRate + '%';
+      dashSavingsRate.style.color = parseFloat(savingsRate) >= 0 ? 'var(--good)' : 'var(--error)';
+    }
+    
+    const dashTransactionsCount = $('dashTransactionsCount');
+    if (dashTransactionsCount) dashTransactionsCount.textContent = totalTransactions;
+    
+    // Calculate total balance, per currency
+    const balanceBuckets = addBuckets(addBuckets(savingsBuckets, netBuckets), debtBuckets, -1);
+    const dashTotalBalance = $('dashTotalBalance');
+    if (dashTotalBalance) {
+      setMoneyStat(dashTotalBalance, balanceBuckets);
+      dashTotalBalance.style.color = leadAmount(balanceBuckets) >= 0 ? 'var(--ink)' : 'var(--error)';
+    }
+    
+    // Render recent activity
+    renderRecentExpenses();
+    renderRecentIncome();
+    
+    // Update charts
+    updateExpenseCategoryChart(monthExpenses);
+    updateIncomeExpenseChart(monthIncome, monthExpenses);
+    updateActivityOverviewChart(monthExpenses, monthIncome);
+  }
+
+  function renderRecentExpenses() {
+    const tbody = $('recentExpensesBody');
+    if (!tbody) return;
+    
+    const recent = data.expenses
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+      .slice(0, 5);
+    
+    tbody.innerHTML = '';
+    if (recent.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--ink-soft); padding:20px;">No expenses yet</td></tr>';
+    } else {
+      recent.forEach(exp => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + escapeHtml(exp.date) + '</td><td>' + escapeHtml(exp.category || 'Other') + '</td><td class="amount">' + fmtAmount(exp.amount) + ' ' + currencyOf(exp) + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  function renderRecentIncome() {
+    const tbody = $('recentIncomeBody');
+    if (!tbody) return;
+    
+    const recent = data.income
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+      .slice(0, 5);
+    
+    tbody.innerHTML = '';
+    if (recent.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--ink-soft); padding:20px;">No income yet</td></tr>';
+    } else {
+      recent.forEach(inc => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + escapeHtml(inc.date) + '</td><td>' + escapeHtml(inc.title || inc.category) + '</td><td class="amount">' + fmtAmount(inc.amount) + ' ' + currencyOf(inc) + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Chart instances
+  let expenseCategoryChartInstance = null;
+  let incomeExpenseChartInstance = null;
+
+  function updateExpenseCategoryChart(monthExpenses) {
+    const ctx = document.getElementById('expenseCategoryChart');
+    if (!ctx) return;
+    
+    // Charts show one currency at a time (FRW unless the books mostly use
+    // another one), so the slices never mix currencies together.
+    const chartCurrency = accountCurrency();
+    
+    // Aggregate expenses by category
+    const categoryTotals = {};
+    rowsInCurrency(monthExpenses, chartCurrency).forEach(exp => {
+      const cat = exp.category || 'Other';
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + (Number(exp.amount) || 0);
+    });
+    
+    const labels = Object.keys(categoryTotals);
+    const values = Object.values(categoryTotals);
+    const colors = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16', '#E11D48'];
+    
+    if (expenseCategoryChartInstance) {
+      expenseCategoryChartInstance.destroy();
+    }
+    
+    expenseCategoryChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors.slice(0, labels.length),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { font: { size: 11 }, padding: 10 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const value = context.parsed;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                return ' ' + context.label + ': ' + fmtAmount(value) + ' ' + chartCurrency + ' (' + percentage + '%)';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updateIncomeExpenseChart(monthIncome, monthExpenses) {
+    const ctx = document.getElementById('incomeExpenseChart');
+    if (!ctx) return;
+    
+    // One currency per chart, so neither bars nor the y-axis mix FRW with USD
+    const chartCurrency = accountCurrency();
+    
+    // Group by month for last 6 months
+    const months = [];
+    const incomeByMonth = [];
+    const expensesByMonth = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKeyStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+      const monthLabel = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+      
+      months.push(monthLabel);
+      
+      const monthInc = rowsInCurrency(data.income.filter(i => monthKey(i.date) === monthKeyStr), chartCurrency);
+      const monthExp = rowsInCurrency(data.expenses.filter(e => monthKey(e.date) === monthKeyStr), chartCurrency);
+      
+      incomeByMonth.push(monthInc.reduce((sum, i) => sum + (Number(i.amount) || 0), 0));
+      expensesByMonth.push(monthExp.reduce((sum, e) => sum + (Number(e.amount) || 0), 0));
+    }
+    
+    if (incomeExpenseChartInstance) {
+      incomeExpenseChartInstance.destroy();
+    }
+    
+    incomeExpenseChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: 'Income',
+            data: incomeByMonth,
+            backgroundColor: '#10B981',
+            borderRadius: 4
+          },
+          {
+            label: 'Expenses',
+            data: expensesByMonth,
+            backgroundColor: '#EF4444',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { size: 12 }, usePointStyle: true, padding: 15 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ' ' + context.dataset.label + ': ' + fmtAmount(context.parsed.y) + ' ' + chartCurrency;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) { return fmtAmount(value) + ' ' + chartCurrency; }
+            }
+          }
+        }
+      }
+    });
   }
 
   /* ---------- add / update / delete (write straight to Supabase) ---------- */
@@ -1636,11 +3164,12 @@
     const amount = parseFloat($('expAmount').value);
     const category = $('expCategory').value.trim();
     const description = $('expDesc').value.trim();
+    const currency = $('expCurrency').value || DEFAULT_CURRENCY;
     if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
 
-    const { error } = await sb.from('expenses').insert({ date, category, description, amount });
+    const { error } = await insertRow('expenses', { date, category, description, amount, currency });
     if (error) { showToast('Could not save: ' + error.message); return; }
-    $('expAmount').value = ''; $('expCategory').value = ''; $('expDesc').value = '';
+    $('expAmount').value = ''; $('expCategory').value = ''; $('expDesc').value = ''; $('expCurrency').value = DEFAULT_CURRENCY;
     showToast('Expense added.');
     fetchAll();
   });
@@ -1651,12 +3180,13 @@
     const amount = parseFloat($('debtAmount').value);
     const person = $('debtPerson').value.trim();
     const description = $('debtDesc').value.trim();
+    const currency = $('debtCurrency').value || DEFAULT_CURRENCY;
     if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
     if (!person) { showToast('Enter who the debt is with.'); return; }
 
-    const { error } = await sb.from('debts').insert({ date, person, description, amount, status: 'unpaid' });
+    const { error } = await insertRow('debts', { date, person, description, amount, status: 'unpaid', currency });
     if (error) { showToast('Could not save: ' + error.message); return; }
-    $('debtAmount').value = ''; $('debtPerson').value = ''; $('debtDesc').value = '';
+    $('debtAmount').value = ''; $('debtPerson').value = ''; $('debtDesc').value = ''; $('debtCurrency').value = DEFAULT_CURRENCY;
     showToast('Debt added.');
     fetchAll();
   });
@@ -1667,17 +3197,19 @@
     const category = $('incomeCategory').value;
     const description = $('incomeDesc').value.trim();
     const date = $('incomeDate').value || todayISO();
+    const currency = $('incomeCurrency').value || DEFAULT_CURRENCY;
     
     if (!title) { showToast('Enter a title.'); return; }
     if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
 
-    const { error } = await sb.from('income').insert({ title, category, description, amount, date });
+    const { error } = await insertRow('income', { title, category, description, amount, date, currency });
     if (error) { showToast('Could not save: ' + error.message); return; }
     
     // Clear form fields
     $('incomeTitle').value = ''; 
     $('incomeAmount').value = ''; 
     $('incomeDesc').value = '';
+    $('incomeCurrency').value = DEFAULT_CURRENCY;
     $('incomeDate').value = todayISO();
     
     showToast('Income added.');
@@ -1688,17 +3220,19 @@
     const type = $('savingsType').value;
     const amount = parseFloat($('savingsAmount').value);
     const reason = $('savingsReason').value.trim();
+    const currency = $('savingsCurrency').value || DEFAULT_CURRENCY;
     const date = $('savingsDate').value || new Date().toISOString();
     
     if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
     if (type === 'withdrawal' && !reason) { showToast('Reason is required for withdrawals.'); return; }
 
-    const { error } = await sb.from('savings').insert({ type, amount, reason: reason || (type === 'deposit' ? 'Savings deposit' : 'Savings withdrawal'), date });
+    const { error } = await insertRow('savings', { type, amount, reason: reason || (type === 'deposit' ? 'Savings deposit' : 'Savings withdrawal'), date, currency });
     if (error) { showToast('Could not save: ' + error.message); return; }
     
     // Clear form fields
     $('savingsAmount').value = ''; 
     $('savingsReason').value = '';
+    $('savingsCurrency').value = DEFAULT_CURRENCY;
     
     // Reset date to current time
     const now = new Date();
@@ -1725,7 +3259,8 @@
         row.classList.add('removing');
         await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
         const { error } = await sb.from('expenses').delete().eq('id', t.dataset.removeExpense);
-        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+        if (error) showToast('Could not remove: ' + error.message);
+        else { forgetCurrency('expenses', t.dataset.removeExpense); fetchAll(); }
       }
     } else if (t.dataset.removeIncome) {
       if (confirm('Remove this income entry?')) {
@@ -1733,7 +3268,8 @@
         row.classList.add('removing');
         await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
         const { error } = await sb.from('income').delete().eq('id', t.dataset.removeIncome);
-        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+        if (error) showToast('Could not remove: ' + error.message);
+        else { forgetCurrency('income', t.dataset.removeIncome); fetchAll(); }
       }
     } else if (t.dataset.removeSavings) {
       if (confirm('Remove this savings movement?')) {
@@ -1741,7 +3277,8 @@
         row.classList.add('removing');
         await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
         const { error } = await sb.from('savings').delete().eq('id', t.dataset.removeSavings);
-        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+        if (error) showToast('Could not remove: ' + error.message);
+        else { forgetCurrency('savings', t.dataset.removeSavings); fetchAll(); }
       }
     } else if (t.dataset.markPaid) {
       const { error } = await sb.from('debts').update({ status: 'paid', paid_date: todayISO() }).eq('id', t.dataset.markPaid);
@@ -1755,7 +3292,8 @@
         row.classList.add('removing');
         await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
         const { error } = await sb.from('debts').delete().eq('id', t.dataset.removeDebt);
-        if (error) showToast('Could not delete: ' + error.message); else fetchAll();
+        if (error) showToast('Could not delete: ' + error.message);
+        else { forgetCurrency('debts', t.dataset.removeDebt); fetchAll(); }
       }
     }
   });
@@ -1793,6 +3331,395 @@
     e.target.value = '';
   });
 
+  /* ---------- Activity Overview Chart (Colorful Bar Chart) ---------- */
+  let activityOverviewChartInstance = null;
+
+  function updateActivityOverviewChart(monthExpenses, monthIncome) {
+    const ctx = document.getElementById('activityOverviewChart');
+    if (!ctx) return;
+    
+    // One currency per chart (FRW by default), never a mixed-currency sum
+    const chartCurrency = accountCurrency();
+    
+    // Calculate data for the last 6 months
+    const months = [];
+    const incomeData = [];
+    const expenseData = [];
+    const savingsData = [];
+    const debtData = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKeyStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+      const monthLabel = date.toLocaleString('default', { month: 'short' });
+      
+      months.push(monthLabel);
+      
+      // Income
+      const monthInc = rowsInCurrency(data.income.filter(i => monthKey(i.date) === monthKeyStr), chartCurrency);
+      incomeData.push(monthInc.reduce((sum, i) => sum + (Number(i.amount) || 0), 0));
+      
+      // Expenses
+      const monthExp = rowsInCurrency(monthExpenses.filter(e => monthKey(e.date) === monthKeyStr), chartCurrency);
+      expenseData.push(monthExp.reduce((sum, e) => sum + (Number(e.amount) || 0), 0));
+      
+      // Savings (net of deposits - withdrawals)
+      const monthSavings = rowsInCurrency(data.savings.filter(s => {
+        const sDate = new Date(s.date);
+        return sDate.getFullYear() === date.getFullYear() && sDate.getMonth() === date.getMonth();
+      }), chartCurrency);
+      const netSavings = monthSavings
+        .filter(s => s.type === 'deposit')
+        .reduce((sum, s) => sum + (Number(s.amount) || 0), 0) -
+        monthSavings
+        .filter(s => s.type === 'withdrawal')
+        .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+      savingsData.push(netSavings);
+      
+      // Debts (new debts added this month)
+      const monthDebts = rowsInCurrency(data.debts.filter(d => monthKey(d.date) === monthKeyStr && d.status === 'unpaid'), chartCurrency);
+      debtData.push(monthDebts.reduce((sum, d) => sum + (Number(d.amount) || 0), 0));
+    }
+    
+    // Destroy previous instance
+    if (activityOverviewChartInstance) {
+      activityOverviewChartInstance.destroy();
+    }
+    
+    // Create colorful stacked bar chart
+    activityOverviewChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: 'Income',
+            data: incomeData,
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            stack: 'stack1'
+          },
+          {
+            label: 'Expenses',
+            data: expenseData,
+            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+            borderColor: 'rgba(239, 68, 68, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            stack: 'stack1'
+          },
+          {
+            label: 'Savings',
+            data: savingsData,
+            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            stack: 'stack2'
+          },
+          {
+            label: 'Debts',
+            data: debtData,
+            backgroundColor: 'rgba(245, 158, 11, 0.8)',
+            borderColor: 'rgba(245, 158, 11, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            stack: 'stack2'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+            titleFont: { size: 13, weight: '600' },
+            bodyFont: { size: 12 },
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y;
+                return ' ' + label + ': ' + fmtAmount(value) + ' ' + chartCurrency;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11, weight: '500' }, color: '#6B7280' }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
+            ticks: {
+              font: { size: 11 },
+              color: '#9CA3AF',
+              callback: function(value) {
+                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M ' + chartCurrency;
+                else if (value >= 1000) return (value / 1000).toFixed(1) + 'K ' + chartCurrency;
+                return value + ' ' + chartCurrency;
+              }
+            }
+          }
+        },
+        elements: {
+          bar: { borderRadius: 4, borderSkipped: false }
+        }
+      }
+    });
+  }
+
+  // Global search functionality
+  $('globalSearch')?.addEventListener('input', () => {
+    if (currentTab === 'expenses') renderExpenses();
+    else if (currentTab === 'income') renderIncome();
+    else if (currentTab === 'savings') renderSavings();
+    else if (currentTab === 'debts') renderDebts();
+    else if (currentTab === 'dashboard') renderDashboard();
+  });
+
+/* ---------------------------------------------------------
+     Live exchange rates for the ticker.
+     Two free, key-less feeds are tried in order. If the browser is offline
+     or both feeds fail, the last good reading is reused and labelled as a
+     saved copy; only when there is nothing saved at all does the ticker fall
+     back to a bundled estimate, and it says so. A rate is never shown as
+     "Live" unless it just came off the network.
+  --------------------------------------------------------- */
+  const FX_BASE = 'USD';
+  const FX_BOOK_CURRENCIES = ['RWF', 'CDF'];   // the currencies this book is kept in
+  const FX_DISPLAY = ['RWF', 'CDF', 'EUR', 'GBP', 'UGX', 'KES', 'JPY', 'CNY'];
+  const FX_CACHE_KEY = 'bwzFxRates:v1';
+  const FX_PREV_KEY = 'bwzFxPrevRates:v1';
+  const FX_MAX_AGE_MS = 6 * 60 * 60 * 1000;    // a saved reading is good for 6 hours
+  const FX_REFRESH_MS = 5 * 60 * 1000;         // then ask again every 5 minutes
+  const FX_TIMEOUT_MS = 10000;
+
+  /* Last-resort numbers, only used when nothing could be fetched or recalled.
+     Shown under an "Offline / Bundled estimate" label, never as live. */
+  const FX_SNAPSHOT = {
+    RWF: 1474.49, CDF: 2305.68, EUR: 0.8667, GBP: 0.7420,
+    UGX: 3756.66, KES: 129.53, JPY: 155.08, CNY: 6.7268
+  };
+
+  let fxTimer = null;
+  let fxInFlight = false;
+
+  function readJsonStore(key){
+    try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) { return null; }
+  }
+
+  function writeJsonStore(key, value){
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) { /* storage blocked or full */ }
+  }
+
+  function setFxStatus(state, label){
+    const pill = $('fxStatus');
+    if (!pill) return;
+    pill.dataset.state = state;
+    pill.textContent = label;
+  }
+
+  function setFxUpdated(text){
+    const el = $('fxUpdated');
+    if (el) el.textContent = text || '';
+  }
+
+  function fxClock(stamp){
+    if (!isFinite(stamp)) return '';
+    const d = new Date(stamp);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
+      d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* Minor-unit currencies (RWF, CDF, JPY) read better with 2 decimals; the
+     big-ticket ones (EUR, GBP) need 4 to be meaningful. */
+  function formatFxRate(value){
+    if (!isFinite(value) || value <= 0) return 'N/A';
+    return value >= 10 ? value.toFixed(2) : value.toFixed(4);
+  }
+
+  function createCurrencyPair(code, rate, change, isPositive, isBook){
+    const changeHtml = (change === null || change === undefined)
+      ? ''
+      : '<span class="currency-change ' + (isPositive ? 'positive' : 'negative') + '">' +
+          (isPositive ? '+' : '') + change + '%</span>';
+    return '<span class="currency-pair' + (isBook ? ' is-book' : '') + '">' +
+      '<span class="currency-code">' + code + '</span>' +
+      '<span class="currency-rate">' + rate + '</span>' + changeHtml +
+      '</span>';
+  }
+
+  /* Move against the previous reading, so the arrow means something real. */
+  function fxChange(code, rate, previous){
+    const before = previous ? Number(previous[code]) : NaN;
+    if (!isFinite(before) || before <= 0 || !isFinite(rate) || rate <= 0) {
+      return { text: null, positive: true };
+    }
+    const pct = ((rate - before) / before) * 100;
+    return { text: pct.toFixed(2), positive: pct >= 0 };
+  }
+
+  function renderTicker(rates, previous){
+    const track = document.querySelector('.ticker-content');
+    if (!track) return;
+    const parts = FX_DISPLAY.map(code => {
+      const rate = rates ? Number(rates[code]) : NaN;
+      const move = fxChange(code, rate, previous);
+      return createCurrencyPair(
+        code,
+        formatFxRate(rate),
+        move.text,
+        move.positive,
+        FX_BOOK_CURRENCIES.indexOf(code) !== -1
+      );
+    });
+    track.innerHTML = parts.join('<span class="ticker-separator">|</span>');
+  }
+
+  /* Fetch JSON with a timeout, so one hanging feed cannot stall the ticker. */
+  async function fetchJson(url, timeoutMs){
+    const controller = (typeof AbortController === 'function') ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), timeoutMs || FX_TIMEOUT_MS) : null;
+    try {
+      const response = await fetch(url, controller ? { signal: controller.signal } : undefined);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return await response.json();
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  /* open.er-api.com: { result, base_code, time_last_update_unix, rates:{ RWF.. } } */
+  function parseErApi(payload){
+    if (!payload || payload.result !== 'success' || !payload.rates) throw new Error('unexpected payload');
+    const stamp = payload.time_last_update_unix ? payload.time_last_update_unix * 1000 : Date.now();
+    return { rates: payload.rates, updated: stamp, source: 'open.er-api.com' };
+  }
+
+  /* currency-api on jsDelivr: { date, usd: { rwf, cdf, eur, ... } } in lower case */
+  function parseCurrencyApi(payload){
+    const table = payload && (payload[FX_BASE.toLowerCase()] || payload.usd);
+    if (!table) throw new Error('unexpected payload');
+    const rates = {};
+    FX_DISPLAY.forEach(code => {
+      const value = Number(table[code.toLowerCase()]);
+      if (isFinite(value) && value > 0) rates[code] = value;
+    });
+    if (!rates.RWF && !rates.CDF) throw new Error('feed has no RWF/CDF');
+    const stamp = Date.parse(payload.date || '');
+    return { rates: rates, updated: isFinite(stamp) ? stamp : Date.now(), source: 'currency-api' };
+  }
+
+  /* Both feeds are public and key-less on purpose: nothing to configure. */
+  const FX_SOURCES = [
+    { url: 'https://open.er-api.com/v6/latest/' + FX_BASE, parse: parseErApi },
+    {
+      url: 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/' + FX_BASE.toLowerCase() + '.json',
+      parse: parseCurrencyApi
+    }
+  ];
+
+  async function fetchLiveRates(){
+    for (let i = 0; i < FX_SOURCES.length; i++) {
+      const source = FX_SOURCES[i];
+      try {
+        const payload = await fetchJson(source.url);
+        return source.parse(payload);
+      } catch (error) {
+        console.warn('FX feed unavailable (' + source.url + '): ' + (error && error.message));
+      }
+    }
+    return null;
+  }
+
+  function cachedFxRates(){
+    const cached = readJsonStore(FX_CACHE_KEY);
+    if (!cached || !cached.rates || !cached.fetchedAt) return null;
+    if (Date.now() - cached.fetchedAt > FX_MAX_AGE_MS) return null;
+    return cached;
+  }
+
+  /* Paint the ticker, then record the reading so the next change % is real. */
+  function applyFxRates(rates, meta){
+    const previous = (meta && meta.previous) || {};
+    renderTicker(rates, previous);
+
+    if (meta.state === 'live') {
+      writeJsonStore(FX_CACHE_KEY, { rates: rates, fetchedAt: Date.now(), updated: meta.updated, source: meta.source });
+      writeJsonStore(FX_PREV_KEY, rates);
+      setFxStatus('live', 'Live');
+      setFxUpdated('Updated ' + fxClock(meta.updated));
+      return;
+    }
+    if (meta.state === 'cached') {
+      setFxStatus('cached', 'Saved copy');
+      setFxUpdated('Updated ' + fxClock(meta.updated));
+      return;
+    }
+    setFxStatus('offline', 'Offline');
+    setFxUpdated('Bundled estimate');
+  }
+
+  function showSavedOrSnapshot(){
+    const cached = cachedFxRates();
+    const previous = cached ? (readJsonStore(FX_PREV_KEY) || {}) : {};
+    if (cached) {
+      applyFxRates(cached.rates, { state: 'cached', updated: cached.updated || cached.fetchedAt, previous: previous });
+      return;
+    }
+    applyFxRates(FX_SNAPSHOT, { state: 'offline', updated: null, previous: previous });
+  }
+
+  async function refreshFxTicker(){
+    if (fxInFlight) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      showSavedOrSnapshot();
+      return;
+    }
+
+    fxInFlight = true;
+    const cached = readJsonStore(FX_CACHE_KEY);
+    const previous = (cached && cached.rates) ? cached.rates : (readJsonStore(FX_PREV_KEY) || {});
+    try {
+      const live = await fetchLiveRates();
+      if (live) {
+        applyFxRates(live.rates, { state: 'live', updated: live.updated, source: live.source, previous: previous });
+        return;
+      }
+      showSavedOrSnapshot();
+    } finally {
+      fxInFlight = false;
+    }
+  }
+
+  function startFxTicker(){
+    refreshFxTicker();
+    if (fxTimer) clearInterval(fxTimer);
+    fxTimer = setInterval(refreshFxTicker, FX_REFRESH_MS);
+  }
+
+  /* Keep the ticker honest about connectivity: refresh when the browser comes
+     back online or when the tab is brought to the front again. */
+  window.addEventListener('online', () => { setFxStatus('live', 'Reconnecting...'); refreshFxTicker(); });
+  window.addEventListener('offline', showSavedOrSnapshot);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshFxTicker(); });
+  window.addEventListener('beforeunload', () => { if (fxTimer) clearInterval(fxTimer); });
   /* ---------- init ---------- */
   $('expDate').value = todayISO();
   $('debtDate').value = todayISO();
@@ -1816,8 +3743,17 @@
   $('authEmail').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('authPassword').focus(); });
   $('authPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('signInBtn').click(); });
 
+  // Initialize the Active Users display.
+  updateBankStatus();
+
   // Initialize tab navigation
   switchTab('expenses');
+
+  // Warn straight away if this database still needs the currency migration.
+  probeCurrencyColumn();
+
+  // Start the live exchange-rate ticker (falls back to saved rates offline).
+  startFxTicker();
   
   // Initialize savings form state
   const reasonRequiredInit = $('reasonRequired');

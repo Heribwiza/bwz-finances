@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Build outputs
+dist/
+build/
+
+# Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files (if you create any)
+.env
+.env.local
+*.env
+
+# Supabase local development (if applicable)
+supabase/.branches/
+supabase/.temp/
+supabase/debug.*
+supabase/generated/
+
+# Large binary files (keep repo small)
+*.zip
+*.tar.gz
+*.pdf
+
+# Backup files (these can be regenerated)
+*bwz_finances_*.json
+
+# Secret files - NEVER commit these
+*.key
+*.pem
+service_role.key
+
+# Logs
+*.log
