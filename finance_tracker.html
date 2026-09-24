@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -283,6 +283,19 @@
     font-size:28px; font-weight:700; color:var(--ink); 
     font-family:var(--font-mono); letter-spacing: -0.02em;
   }
+  .stat-box .stat-num .stat-value{
+    display:block;
+  }
+  
+  /* Extra currencies of a mixed-currency total, e.g. "40 USD · 25 CDF" */
+  .stat-box .stat-num .stat-extra{
+    display:block; margin-top:2px; font-size:13px; font-weight:700;
+    color:var(--ink-soft); letter-spacing:0;
+  }
+  
+  .stat-box .stat-num .stat-extra:empty{
+    display:none;
+  }
   
   .stat-box .stat-label{
     font-size:13px; color:var(--ink-soft); margin-top:var(--spacing-sm);
@@ -352,6 +365,41 @@
   
   .fatal-banner.show{
     display:block;
+  }
+
+  /* Setup warning: a required database migration has not been applied yet. */
+  .setup-banner{
+    display:none; background:var(--warning-bg); border:1px solid var(--warning);
+    color:var(--ink); padding:var(--spacing-md) var(--spacing-lg);
+    border-radius:var(--radius-md); margin-bottom:var(--spacing-lg); font-size:14px;
+    line-height:1.5;
+  }
+
+  .setup-banner.show{
+    display:block;
+  }
+
+  .setup-banner h3{
+    margin:0 0 var(--spacing-sm) 0; font-size:15px; color:var(--warning); font-weight:700;
+  }
+
+  .setup-banner p{
+    margin:0 0 var(--spacing-sm) 0; color:var(--ink-soft);
+  }
+
+  .setup-banner pre{
+    background:var(--paper); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:var(--spacing-sm) var(--spacing-md); margin:0 0 var(--spacing-sm) 0;
+    overflow:auto; font-family:var(--font-mono); font-size:12px; color:var(--ink);
+    white-space:pre;
+  }
+
+  .setup-banner .setup-actions{
+    display:flex; gap:var(--spacing-sm); align-items:center; flex-wrap:wrap;
+  }
+
+  .setup-banner .setup-note{
+    font-size:12px; color:var(--ink-soft); margin:0;
   }
 
   /* ---------- auth screen ---------- */
@@ -924,6 +972,7 @@
   
   .security-badges-row {
     display: flex;
+    justify-content: center;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
     flex-wrap: wrap;
@@ -975,6 +1024,74 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .ticker-label .ticker-base {
+    color: var(--border-color);
+  }
+  
+  .ticker-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
+  
+  /* Where the rates came from: live feed, saved copy, or bundled snapshot */
+  .fx-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary, var(--bg-secondary));
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+  }
+  
+  .fx-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  
+  .fx-status[data-state="live"] {
+    color: var(--primary);
+    background: var(--primary-bg);
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+  
+  .fx-status[data-state="cached"] {
+    color: var(--warning);
+    background: var(--warning-bg);
+    border-color: rgba(245, 158, 11, 0.25);
+  }
+  
+  .fx-status[data-state="offline"] {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+  
+  .fx-updated {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  
+  /* The currencies this app books in, marked so they stand out */
+  .currency-pair.is-book .currency-code {
+    color: var(--primary);
   }
   
   .ticker-track {
@@ -1212,137 +1329,6 @@
     }
   }
 
-
-  // ============================================
-  // Currency Exchange Rates - Real-time Updates
-  // ============================================
-  let exchangeRatesInterval = null;
-  
-  async function fetchExchangeRates() {
-    try {
-      // Free API for exchange rates (no key required)
-      const response = await fetch('https://api.exchangerate.host/latest?base=USD');
-      
-      if (!response.ok) {
-        throw new Error('API response not OK');
-      }
-      
-      const data = await response.json();
-      
-      if (data && data.rates) {
-        updateExchangeTicker(data.rates);
-      } else {
-        throw new Error('Invalid API response');
-      }
-    } catch (error) {
-      console.warn('Could not fetch exchange rates, using fallback:', error.message);
-      useFallbackRates();
-    }
-  }
-  
-  function updateExchangeTicker(rates) {
-    const tickerContent = document.querySelector('.ticker-content');
-    if (!tickerContent) return;
-    
-    const currencies = [
-      { code: 'USD', base: true },
-      { code: 'EUR' },
-      { code: 'GBP' },
-      { code: 'RWF' },
-      { code: 'CDF' },
-      { code: 'JPY' },
-      { code: 'CNY' },
-      { code: 'UGX' }
-    ];
-    
-    let html = '';
-    currencies.forEach((curr, index) => {
-      if (curr.base) {
-        html += createCurrencyPair(curr.code, '1.00', null, true);
-      } else {
-        const rate = rates[curr.code] ? rates[curr.code].toFixed(2) : 'N/A';
-        // Calculate change (in real app, compare with stored previous rate)
-        const change = ((Math.random() * 0.4) - 0.2).toFixed(2);
-        const isPositive = parseFloat(change) >= 0;
-        html += createCurrencyPair(curr.code, rate, change, isPositive);
-      }
-      
-      if (index < currencies.length - 1) {
-        html += '<span class="ticker-separator">|</span>';
-      }
-    });
-    
-    tickerContent.innerHTML = html;
-  }
-  
-  function createCurrencyPair(code, rate, change, isPositiveChange) {
-    const changeHtml = change ? 
-      `<span class="currency-change ${isPositiveChange ? 'positive' : 'negative'}">${isPositiveChange ? '+' : ''}${change}%</span>` : 
-      '';
-    
-    return `<span class="currency-pair">
-      <span class="currency-code">${code}</span>
-      <span class="currency-rate">${rate}</span>
-      ${changeHtml}
-    </span>`;
-  }
-  
-  function useFallbackRates() {
-    const rates = {
-      EUR: 0.9234,
-      GBP: 0.7912,
-      RWF: 1285.50,
-      CDF: 2.75,
-      JPY: 149.50,
-      CNY: 7.24,
-      UGX: 3720.00
-    };
-    
-    const currencies = [
-      { code: 'USD', base: true },
-      { code: 'EUR' },
-      { code: 'GBP' },
-      { code: 'RWF' },
-      { code: 'CDF' },
-      { code: 'JPY' },
-      { code: 'CNY' },
-      { code: 'UGX' }
-    ];
-    
-    let html = '';
-    currencies.forEach((curr, index) => {
-      if (curr.base) {
-        html += createCurrencyPair(curr.code, '1.00', null, true);
-      } else {
-        const rate = rates[curr.code] ? rates[curr.code].toFixed(2) : 'N/A';
-        const change = ((Math.random() * 0.4) - 0.2).toFixed(2);
-        const isPositive = parseFloat(change) >= 0;
-        html += createCurrencyPair(curr.code, rate, change, isPositive);
-      }
-      
-      if (index < currencies.length - 1) {
-        html += '<span class="ticker-separator">|</span>';
-      }
-    });
-    
-    const tickerContent = document.querySelector('.ticker-content');
-    if (tickerContent) {
-      tickerContent.innerHTML = html;
-    }
-  }
-  
-  // Initialize
-  document.addEventListener('DOMContentLoaded', function() {
-    fetchExchangeRates();
-    exchangeRatesInterval = setInterval(fetchExchangeRates, 60000);
-  });
-  
-  window.addEventListener('beforeunload', function() {
-    if (exchangeRatesInterval) {
-      clearInterval(exchangeRatesInterval);
-    }
-  });
-
 </style>
 </head>
 <body>
@@ -1377,39 +1363,21 @@
 
     <!-- Currency Exchange Ticker -->
     <div class="exchange-ticker no-print">
-      <div class="ticker-label">Live Exchange Rates</div>
+      <div class="ticker-label">
+        <span>Exchange Rates <span class="ticker-base">/ 1 USD</span></span>
+        <span class="ticker-meta">
+          <span class="fx-status" id="fxStatus">Connecting…</span>
+          <span class="fx-updated" id="fxUpdated"></span>
+        </span>
+      </div>
       <div class="ticker-track">
         <div class="ticker-content">
-          <span class="currency-pair">
-            <span class="currency-code">USD</span>
-            <span class="currency-rate">1.00</span>
-          </span>
-          <span class="ticker-separator">|</span>
-          <span class="currency-pair">
-            <span class="currency-code">EUR</span>
-            <span class="currency-rate">0.92</span>
-            <span class="currency-change positive">+0.15%</span>
-          </span>
-          <span class="ticker-separator">|</span>
-          <span class="currency-pair">
-            <span class="currency-code">GBP</span>
-            <span class="currency-rate">0.79</span>
-            <span class="currency-change positive">+0.22%</span>
-          </span>
-          <span class="ticker-separator">|</span>
-          <span class="currency-pair">
+          <span class="currency-pair is-book">
             <span class="currency-code">RWF</span>
-            <span class="currency-rate">1285.50</span>
-            <span class="currency-change negative">-0.05%</span>
+            <span class="currency-rate">loading...</span>
           </span>
-          <span class="ticker-separator">|</span>
-          <span class="currency-pair">
-            <span class="currency-code">CDF</span>
-            <span class="currency-rate">2.75</span>
-            <span class="currency-change negative">-0.10%</span>
-          </span>
-          <span class="ticker-separator">|</span>
         </div>
+        <noscript><span class="fx-updated">Live rates need JavaScript enabled.</span></noscript>
       </div>
     </div>
 
@@ -1439,12 +1407,6 @@
           </svg>
           <span>HQ: Kigali, Rwanda</span>
         </div>
-        <div class="bank-detail">
-          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 011.7 1.86 2 2 0 014 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-          </svg>
-          <span>+250 788 123 456</span>
-        </div>
       </div>
       <div class="bank-status">
         <div class="status-indicator">
@@ -1453,12 +1415,8 @@
         </div>
         <div class="bank-stats">
           <div class="bank-stat">
-            <span class="stat-value">2,847</span>
+            <span class="stat-value" id="bankActiveUsers">1</span>
             <span class="stat-label">Active Users</span>
-          </div>
-          <div class="bank-stat">
-            <span class="stat-value">$12.4M</span>
-            <span class="stat-label">Volume Today</span>
           </div>
         </div>
       </div>
@@ -1488,6 +1446,8 @@
   <p class="subtitle">Comprehensive finance tracker for expense, income, savings, and debt management.</p>
 
   <div class="fatal-banner no-print" id="fatalBanner"></div>
+
+  <div class="setup-banner no-print" id="setupBanner" role="status" aria-live="polite"></div>
 
   <div class="sync-bar no-print">
     <div>
@@ -1665,6 +1625,14 @@
           <label for="expAmount">Amount</label>
           <input type="number" id="expAmount" min="0" step="any" placeholder="e.g. 5000">
         </div>
+        <div class="field">
+          <label for="expCurrency">Currency</label>
+          <select id="expCurrency">
+            <option value="RWF" selected>RWF (FRW)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CDF">CDF (FC)</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="expCategory">Category</label>
@@ -1736,6 +1704,14 @@
         <div class="field">
           <label for="incomeAmount">Amount</label>
           <input type="number" id="incomeAmount" min="0" step="any" placeholder="e.g. 5000">
+        </div>
+        <div class="field">
+          <label for="incomeCurrency">Currency</label>
+          <select id="incomeCurrency">
+            <option value="RWF" selected>RWF (FRW)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CDF">CDF (FC)</option>
+          </select>
         </div>
       </div>
       <div class="field-row">
@@ -1824,6 +1800,14 @@
           <label for="savingsAmount">Amount</label>
           <input type="number" id="savingsAmount" min="0" step="any" placeholder="e.g. 1000">
         </div>
+        <div class="field">
+          <label for="savingsCurrency">Currency</label>
+          <select id="savingsCurrency">
+            <option value="RWF" selected>RWF (FRW)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CDF">CDF (FC)</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="savingsReason">Reason <span id="reasonRequired" style="color:var(--error); font-size:11px;">(required for withdrawals)</span></label>
@@ -1881,6 +1865,14 @@
           <label for="debtAmount">Amount</label>
           <input type="number" id="debtAmount" min="0" step="any" placeholder="e.g. 20000">
         </div>
+        <div class="field">
+          <label for="debtCurrency">Currency</label>
+          <select id="debtCurrency">
+            <option value="RWF" selected>RWF (FRW)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CDF">CDF (FC)</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="debtPerson">Owed to / from</label>
@@ -1926,6 +1918,316 @@
 
   const $ = (id) => document.getElementById(id);
 
+  /* ---------------------------------------------------------
+     Currency. New entries are logged in the Rwandan franc (FRW) unless the
+     user picks another currency in the form. Amounts in different currencies
+     are never added together: every total is shown once per currency, with
+     the account currency (FRW) leading.
+  --------------------------------------------------------- */
+  const DEFAULT_CURRENCY = 'RWF';
+
+  function currencyOf(row){
+    return (row && row.currency) ? row.currency : DEFAULT_CURRENCY;
+  }
+
+  /* The currency most of the money in these rows is expressed in. */
+  function dominantCurrency(rows){
+    const totals = {};
+    (rows || []).forEach(row => {
+      const code = currencyOf(row);
+      totals[code] = (totals[code] || 0) + (Number(row.amount) || 0);
+    });
+    const codes = Object.keys(totals);
+    if (!codes.length) return DEFAULT_CURRENCY;
+    return codes.sort((a, b) => totals[b] - totals[a])[0];
+  }
+
+  /* The currency the account is mostly kept in (used for chart axes). */
+  function accountCurrency(){
+    return dominantCurrency(data.expenses.concat(data.income, data.savings, data.debts));
+  }
+
+  /* The currencies the tracker books in, FRW (the data currency) first. */
+  const CURRENCY_ORDER = ['RWF', 'USD', 'CDF'];
+
+  /* Add rows up per currency, e.g. { RWF: 150000, USD: 40 }.
+     Rows in different currencies are never added together. */
+  function sumByCurrency(rows){
+    const buckets = {};
+    (rows || []).forEach(row => {
+      const code = currencyOf(row);
+      buckets[code] = (buckets[code] || 0) + (Number(row.amount) || 0);
+    });
+    return buckets;
+  }
+
+  /* Rows booked in one currency. Chart datasets plot a single currency at a
+     time, otherwise the bars would add FRW to USD as if they were the same. */
+  function rowsInCurrency(rows, code){
+    const target = code || DEFAULT_CURRENCY;
+    return (rows || []).filter(row => currencyOf(row) === target);
+  }
+
+  /* Combine two per-currency maps; sign -1 subtracts the second one. */
+  function addBuckets(base, extra, sign){
+    const out = Object.assign({}, base || {});
+    Object.keys(extra || {}).forEach(code => {
+      out[code] = (out[code] || 0) + (sign === -1 ? -1 : 1) * (Number(extra[code]) || 0);
+    });
+    return out;
+  }
+
+  /* Net of one set of rows minus another (income minus expenses, deposits
+     minus withdrawals), kept per currency. */
+  function netByCurrency(positiveRows, negativeRows){
+    return addBuckets(sumByCurrency(positiveRows), sumByCurrency(negativeRows), -1);
+  }
+
+  /* Bucket keys in display order, the account currency first. */
+  function bucketCurrencies(buckets){
+    const codes = Object.keys(buckets || {});
+    const rank = code => {
+      const i = CURRENCY_ORDER.indexOf(code);
+      return i === -1 ? CURRENCY_ORDER.length : i;
+    };
+    codes.sort((a, b) => rank(a) - rank(b));
+    if (codes.length > 1) {
+      const i = codes.indexOf(DEFAULT_CURRENCY);
+      if (i > 0) codes.splice(0, 0, codes.splice(i, 1)[0]);
+    }
+    return codes;
+  }
+
+  /* The headline figure of a bucket map: the account currency when it is
+     present, otherwise the largest amount. Used for colour coding and for
+     the percentages, which must be worked out inside one currency. */
+  function leadAmount(buckets){
+    const codes = bucketCurrencies(buckets);
+    return codes.length ? (Number(buckets[codes[0]]) || 0) : 0;
+  }
+
+  /* Show a money stat. `value` is either a single amount plus its currency,
+     or a { currency: amount } map — in which case the leading currency is
+     animated as the big figure and every other currency is listed underneath,
+     so FRW, USD and CDF totals are never mixed into one number. */
+  function setMoneyStat(element, value, currency){
+    if (!element) return;
+
+    const buckets = (value && typeof value === 'object' && !Array.isArray(value))
+      ? Object.assign({}, value)
+      : { [(currency || DEFAULT_CURRENCY)]: Number(value) || 0 };
+
+    let codes = bucketCurrencies(buckets);
+    if (!codes.length) { codes = [DEFAULT_CURRENCY]; buckets[DEFAULT_CURRENCY] = 0; }
+
+    let main = element.querySelector('.stat-value');
+    if (!main) {
+      element.textContent = '';
+      main = document.createElement('span');
+      main.className = 'stat-value';
+      element.appendChild(main);
+    }
+    let extra = element.querySelector('.stat-extra');
+    if (!extra) {
+      extra = document.createElement('span');
+      extra.className = 'stat-extra';
+      element.appendChild(extra);
+    }
+
+    element.dataset.currency = codes[0];
+    element.dataset.currencies = codes.join(',');
+    main.dataset.currency = codes[0];
+    animateNumber(main, Number(buckets[codes[0]]) || 0);
+
+    extra.textContent = codes.slice(1)
+      .map(code => fmtAmount(buckets[code]) + ' ' + code)
+      .join(' · ');
+  }
+
+  /* ---------------------------------------------------------
+     Currency storage. The `currency` column is optional in the schema. When a
+     database has not been migrated yet the picked currency cannot be stored in
+     the row, so this browser keeps it next to the saved row's id and the app
+     points the user at the migration.
+  --------------------------------------------------------- */
+  const CURRENCY_BRIDGE_KEY = 'bwzRowCurrency:v1';
+  let currencyColumnMissing = false;
+
+  const CURRENCY_COLUMN_SQL =
+    'alter table public.expenses add column if not exists currency text not null default \'RWF\';\n' +
+    'alter table public.debts    add column if not exists currency text not null default \'RWF\';\n' +
+    'alter table public.income   add column if not exists currency text not null default \'RWF\';\n' +
+    'alter table public.savings  add column if not exists currency text not null default \'RWF\';';
+
+  function bridgeMap(){
+    try { return JSON.parse(localStorage.getItem(CURRENCY_BRIDGE_KEY) || '{}') || {}; }
+    catch (_) { return {}; }
+  }
+
+  /* Remember which currency a row was saved in, keyed by table and row id. */
+  function rememberCurrency(table, id, code){
+    if (id === undefined || id === null || !code) return;
+    try {
+      const map = bridgeMap();
+      map[table + ':' + id] = code;
+      localStorage.setItem(CURRENCY_BRIDGE_KEY, JSON.stringify(map));
+    } catch (_) { /* storage unavailable — the database column is the real home */ }
+  }
+
+  function rememberedCurrency(table, id){
+    if (id === undefined || id === null) return null;
+    return bridgeMap()[table + ':' + id] || null;
+  }
+
+  /* The currency a loaded row is shown in: what the database stored, then what
+     this browser remembers, then the FRW default.
+
+     A row saved before the `currency` column existed was backfilled to the
+     default by the migration, so when the database holds nothing but that
+     default while this browser remembers a deliberate pick, the remembered
+     value is the truth we should show. Row ids are unique per table, so a
+     remembered entry can only ever belong to the row it was saved with. */
+  function currencyForDbRow(table, row){
+    const stored = (row && row.currency) ? row.currency : null;
+    const remembered = rememberedCurrency(table, row && row.id);
+    if (remembered && (!stored || (stored === DEFAULT_CURRENCY && remembered !== DEFAULT_CURRENCY))) {
+      return remembered;
+    }
+    return stored || remembered || DEFAULT_CURRENCY;
+  }
+
+  /* Tell the user, once and clearly, that the database is missing the column
+     and exactly how to add it. */
+  function showSetupBanner(){
+    const banner = $('setupBanner');
+    if (!banner || banner.dataset.shown === '1') return;
+    banner.dataset.shown = '1';
+    banner.innerHTML =
+      '<h3>Currency storage needs a one-time database update</h3>' +
+      '<p>Your entries are saving, but this database has no <code>currency</code> column yet, ' +
+      'so a CDF or USD entry reloads as FRW. Run this once in the Supabase SQL editor, ' +
+      'then press Refresh — nothing else needs to change:</p>' +
+      '<pre id="setupSql"></pre>' +
+      '<div class="setup-actions">' +
+        '<button class="btn btn-primary btn-small" id="setupCopyBtn" type="button">Copy SQL</button>' +
+        '<button class="btn btn-ghost btn-small" id="setupDismissBtn" type="button">Dismiss</button>' +
+        '<p class="setup-note">Until then this browser remembers the currency you picked, ' +
+        'so your CDF and USD entries still show correctly here.</p>' +
+      '</div>';
+    const pre = $('setupSql');
+    if (pre) pre.textContent = CURRENCY_COLUMN_SQL;
+    const copy = $('setupCopyBtn');
+    if (copy) copy.addEventListener('click', () => copyText(CURRENCY_COLUMN_SQL, copy));
+    const dismiss = $('setupDismissBtn');
+    if (dismiss) dismiss.addEventListener('click', () => banner.classList.remove('show'));
+    banner.classList.add('show');
+  }
+
+  function copyText(text, button){
+    const done = () => {
+      if (!button) return;
+      button.textContent = 'Copied';
+      setTimeout(() => { button.textContent = 'Copy SQL'; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done){
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); done(); }
+    catch (_) { showToast('Copy the SQL from the banner by hand.'); }
+    document.body.removeChild(area);
+  }
+
+  async function insertRow(table, row){
+    const saved = await sb.from(table).insert(row).select('*');
+    if (!saved.error) {
+      const persisted = Array.isArray(saved.data) ? saved.data[0] : saved.data;
+      if (persisted && persisted.id !== undefined) rememberCurrency(table, persisted.id, row.currency);
+      return { error: null };
+    }
+
+    if (/currency/i.test(saved.error.message || '')) {
+      currencyColumnMissing = true;
+      showSetupBanner();
+      const withoutCurrency = Object.assign({}, row);
+      delete withoutCurrency.currency;
+      const retry = await sb.from(table).insert(withoutCurrency).select('*');
+      if (retry.error) return { error: retry.error };
+      const persisted = Array.isArray(retry.data) ? retry.data[0] : retry.data;
+      if (persisted && persisted.id !== undefined) rememberCurrency(table, persisted.id, row.currency);
+      return { error: null };
+    }
+    return { error: saved.error };
+  }
+
+  /* Bulk variant of insertRow(), used by the backup import: saves every row and
+     remembers each currency by the id Supabase returns. */
+  async function insertRows(table, rows){
+    const saved = await sb.from(table).insert(rows).select('*');
+    if (!saved.error) {
+      rememberCurrencies(table, rows, saved.data);
+      return { error: null };
+    }
+
+    if (/currency/i.test(saved.error.message || '')) {
+      currencyColumnMissing = true;
+      showSetupBanner();
+      const stripped = rows.map(r => {
+        const copy = Object.assign({}, r);
+        delete copy.currency;
+        return copy;
+      });
+      const retry = await sb.from(table).insert(stripped).select('*');
+      if (retry.error) return { error: retry.error };
+      rememberCurrencies(table, rows, retry.data);
+      return { error: null };
+    }
+    return { error: saved.error };
+  }
+
+  /* Supabase returns inserted rows in the order they were sent, so index i of
+     the response belongs to rows[i]. */
+  function rememberCurrencies(table, rows, persisted){
+    if (!Array.isArray(persisted)) return;
+    persisted.forEach((row, i) => {
+      if (row && row.id !== undefined && rows[i]) rememberCurrency(table, row.id, rows[i].currency);
+    });
+  }
+
+  function forgetCurrency(table, id){
+    if (id === undefined || id === null) return;
+    try {
+      const map = bridgeMap();
+      delete map[table + ':' + id];
+      localStorage.setItem(CURRENCY_BRIDGE_KEY, JSON.stringify(map));
+    } catch (_) { /* nothing to clean up */ }
+  }
+
+  /* Ask Supabase whether the optional column exists yet (a missing column is
+     reported before row-level security is applied, so this needs no sign-in). */
+  async function probeCurrencyColumn(){
+    try {
+      const { error } = await sb.from('expenses').select('currency').limit(1);
+      if (error && /currency/i.test(error.message || '')) {
+        currencyColumnMissing = true;
+        showSetupBanner();
+      } else if (!error) {
+        currencyColumnMissing = false;
+      }
+    } catch (_) { /* offline: try again on the next load */ }
+  }
+
   function todayISO(){
     const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -1947,7 +2249,8 @@
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
       const currentValue = startValue + (targetValue - startValue) * easeOutQuart;
       
-      element.textContent = fmtAmount(currentValue);
+      const currencySuffix = (element.dataset && element.dataset.currency) ? ' ' + element.dataset.currency : '';
+      element.textContent = fmtAmount(currentValue) + currencySuffix;
       
       if (progress < 1) {
         requestAnimationFrame(update);
@@ -2065,23 +2368,29 @@
     } else {
       currentUserId = null;
       if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+      // Clear the previous account's data on sign-out.
+      data = { expenses: [], debts: [], income: [], savings: [] };
+      updateBankStatus();
       $('authScreen').style.display = 'block';
       $('appScreen').style.display = 'none';
     }
   });
 
   /* ---------- data mapping (DB snake_case <-> app camelCase) ---------- */
+  // A row is shown in the currency the database stored for it; rows saved before
+  // currencies existed (or while the optional column was still missing) fall back
+  // to what this browser remembered for that row, and finally to FRW.
   function mapExpenseFromDb(row){
-    return { id: row.id, date: row.date, category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0 };
+    return { id: row.id, date: row.date, category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0, currency: currencyForDbRow('expenses', row) };
   }
   function mapDebtFromDb(row){
-    return { id: row.id, date: row.date, person: row.person || '', description: row.description || '', amount: Number(row.amount) || 0, status: row.status === 'paid' ? 'paid' : 'unpaid', paidDate: row.paid_date || null };
+    return { id: row.id, date: row.date, person: row.person || '', description: row.description || '', amount: Number(row.amount) || 0, status: row.status === 'paid' ? 'paid' : 'unpaid', paidDate: row.paid_date || null, currency: currencyForDbRow('debts', row) };
   }
   function mapIncomeFromDb(row){
-    return { id: row.id, title: row.title || '', category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0, date: row.date };
+    return { id: row.id, title: row.title || '', category: row.category || '', description: row.description || '', amount: Number(row.amount) || 0, date: row.date, currency: currencyForDbRow('income', row) };
   }
   function mapSavingsFromDb(row){
-    return { id: row.id, type: row.type || 'deposit', amount: Number(row.amount) || 0, reason: row.reason || '', date: row.date };
+    return { id: row.id, type: row.type || 'deposit', amount: Number(row.amount) || 0, reason: row.reason || '', date: row.date, currency: currencyForDbRow('savings', row) };
   }
 
   /* ---------- fetch from Supabase ---------- */
@@ -2091,6 +2400,8 @@
       
       // Fetch all data including new tables
       const [expRes, debtRes, incomeRes, savingsRes] = await Promise.all([
+        // select('*') keeps the row ids (needed by the delete / mark-paid buttons)
+        // and picks up the `currency` column automatically once it exists.
         sb.from('expenses').select('*').order('date', { ascending: true }),
         sb.from('debts').select('*').order('date', { ascending: true }),
         sb.from('income').select('*').order('date', { ascending: true }),
@@ -2175,8 +2486,9 @@
             category: e.category || '',
             description: e.description || '',
             amount: Number(e.amount) || 0,
+            currency: e.currency || DEFAULT_CURRENCY,
           }));
-          const { error } = await sb.from('expenses').insert(rows);
+          const { error } = await insertRows('expenses', rows);
           if (error) throw error;
         }
         if (debts.length) {
@@ -2187,8 +2499,9 @@
             amount: Number(d.amount) || 0,
             status: d.status === 'paid' ? 'paid' : 'unpaid',
             paid_date: d.paidDate || null,
+            currency: d.currency || DEFAULT_CURRENCY,
           }));
-          const { error } = await sb.from('debts').insert(rows);
+          const { error } = await insertRows('debts', rows);
           if (error) throw error;
         }
         if (income.length) {
@@ -2198,8 +2511,9 @@
             description: i.description || '',
             amount: Number(i.amount) || 0,
             date: typeof i.date === 'string' && i.date ? i.date : todayISO(),
+            currency: i.currency || DEFAULT_CURRENCY,
           }));
-          const { error } = await sb.from('income').insert(rows);
+          const { error } = await insertRows('income', rows);
           if (error) throw error;
         }
         if (savings.length) {
@@ -2208,8 +2522,9 @@
             amount: Number(s.amount) || 0,
             reason: s.reason || '',
             date: s.date || new Date().toISOString(),
+            currency: s.currency || DEFAULT_CURRENCY,
           }));
-          const { error } = await sb.from('savings').insert(rows);
+          const { error } = await insertRows('savings', rows);
           if (error) throw error;
         }
         showToast('Import complete.');
@@ -2298,14 +2613,13 @@
           '<td>' + escapeHtml(e.date) + '</td>' +
           '<td>' + escapeHtml(e.category || '—') + '</td>' +
           '<td>' + escapeHtml(e.description || '') + '</td>' +
-          '<td class="amount">' + fmtAmount(e.amount) + '</td>' +
+          '<td class="amount">' + fmtAmount(e.amount) + ' ' + currencyOf(e) + '</td>' +
           '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-expense="' + e.id + '" aria-label="Remove expense: ' + escapeHtml(e.description || e.category || e.date) + '">Remove</button></td>';
         tbody.appendChild(tr);
       });
     }
 
-    const total = rows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    animateNumber($('statTotalExpense'), total);
+    setMoneyStat($('statTotalExpense'), sumByCurrency(rows));
   }
 
   function renderDebts(){
@@ -2338,7 +2652,7 @@
           '<td>' + escapeHtml(d.date || '') + '</td>' +
           '<td>' + escapeHtml(d.person || '') + '</td>' +
           '<td>' + escapeHtml(d.description || '') + '</td>' +
-          '<td class="amount">' + fmtAmount(d.amount) + '</td>' +
+          '<td class="amount">' + fmtAmount(d.amount) + ' ' + currencyOf(d) + '</td>' +
           '<td><span class="status-pill ' + d.status + '">' + d.status + '</span></td>' +
           '<td class="no-print">' +
             (d.status === 'unpaid'
@@ -2350,10 +2664,11 @@
       });
     }
 
-    const unpaidTotal = data.debts.filter(d => d.status === 'unpaid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
-    const paidTotal = data.debts.filter(d => d.status === 'paid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
-    animateNumber($('statUnpaidDebt'), unpaidTotal);
-    animateNumber($('statPaidDebt'), paidTotal);
+    // Totals are kept per currency so FRW, USD and CDF are never merged
+    const unpaidRows = data.debts.filter(d => d.status === 'unpaid');
+    const paidRows = data.debts.filter(d => d.status === 'paid');
+    setMoneyStat($('statUnpaidDebt'), sumByCurrency(unpaidRows));
+    setMoneyStat($('statPaidDebt'), sumByCurrency(paidRows));
   }
 
   function renderIncome(){
@@ -2404,19 +2719,19 @@
           '<td>' + escapeHtml(i.title) + '</td>' +
           '<td><span class="status-pill paid">' + escapeHtml(i.category) + '</span></td>' +
           '<td>' + escapeHtml(i.description || '') + '</td>' +
-          '<td class="amount">' + fmtAmount(i.amount) + '</td>' +
+          '<td class="amount">' + fmtAmount(i.amount) + ' ' + currencyOf(i) + '</td>' +
           '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-income="' + i.id + '" aria-label="Remove income: ' + escapeHtml(i.title) + '">Remove</button></td>';
         tbody.appendChild(tr);
       });
     }
 
-    // Calculate totals
+    // Calculate totals, one figure per currency (never merged together)
     const monthIncome = data.income.filter(i => monthKey(i.date) === selectedMonth);
-    const total = monthIncome.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    const totalBuckets = sumByCurrency(monthIncome);
     
-    const categoryTotal = categoryFilter === 'all' 
-      ? total 
-      : monthIncome.filter(i => i.category === categoryFilter).reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+    const categoryBuckets = categoryFilter === 'all' 
+      ? totalBuckets 
+      : sumByCurrency(monthIncome.filter(i => i.category === categoryFilter));
     
     // Count unique income sources (categories)
     const uniqueCategories = new Set(monthIncome.map(i => i.category));
@@ -2426,8 +2741,8 @@
     const statIncomeByCategory = $('statIncomeByCategory');
     const statIncomeSources = $('statIncomeSources');
     
-    if (statIncomeTotal) animateNumber(statIncomeTotal, total);
-    if (statIncomeByCategory) animateNumber(statIncomeByCategory, categoryTotal);
+    if (statIncomeTotal) setMoneyStat(statIncomeTotal, totalBuckets);
+    if (statIncomeByCategory) setMoneyStat(statIncomeByCategory, categoryBuckets);
     if (statIncomeSources) statIncomeSources.textContent = incomeSources;
   }
 
@@ -2476,21 +2791,25 @@
         tr.innerHTML =
           '<td>' + escapeHtml(new Date(s.date).toLocaleString()) + '</td>' +
           '<td><span class="' + typeClass + '">' + (isDeposit ? 'Deposit' : 'Withdrawal') + '</span></td>' +
-          '<td class="amount ' + amountClass + '">' + amountPrefix + fmtAmount(s.amount) + '</td>' +
+          '<td class="amount ' + amountClass + '">' + amountPrefix + fmtAmount(s.amount) + ' ' + currencyOf(s) + '</td>' +
           '<td>' + escapeHtml(s.reason) + '</td>' +
           '<td class="no-print"><button class="btn btn-danger btn-small" data-remove-savings="' + s.id + '" aria-label="Remove savings: ' + escapeHtml(s.reason) + '">Remove</button></td>';
         tbody.appendChild(tr);
       });
     }
 
-    // Calculate totals (always show overall stats, not filtered)
-    const totalDeposits = data.savings.filter(s => s.type === 'deposit').reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
-    const totalWithdrawals = data.savings.filter(s => s.type === 'withdrawal').reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
-    const balance = totalDeposits - totalWithdrawals;
+    // Calculate totals, one figure per currency (never merged together)
+    const depositRows = data.savings.filter(s => s.type === 'deposit');
+    const withdrawalRows = data.savings.filter(s => s.type === 'withdrawal');
+    const depositBuckets = sumByCurrency(depositRows);
+    const withdrawalBuckets = sumByCurrency(withdrawalRows);
+    const balanceBuckets = addBuckets(depositBuckets, withdrawalBuckets, -1);
     
-    // Calculate savings growth (deposit ratio)
-    const totalMovements = totalDeposits + totalWithdrawals;
-    const savingsGrowth = totalMovements > 0 ? ((totalDeposits / totalMovements) * 100).toFixed(1) : 0;
+    // Calculate savings growth (deposit ratio, compared inside one currency)
+    const depositLead = leadAmount(depositBuckets);
+    const withdrawalLead = leadAmount(withdrawalBuckets);
+    const totalMovements = depositLead + withdrawalLead;
+    const savingsGrowth = totalMovements > 0 ? ((depositLead / totalMovements) * 100).toFixed(1) : 0;
     
     const statSavingsBalance = $('statSavingsBalance');
     const statTotalDeposits = $('statTotalDeposits');
@@ -2498,16 +2817,24 @@
     const statSavingsGrowth = $('statSavingsGrowth');
     
     if (statSavingsBalance) {
-      animateNumber(statSavingsBalance, balance);
+      setMoneyStat(statSavingsBalance, balanceBuckets);
       // Color code balance
-      statSavingsBalance.style.color = balance >= 0 ? 'var(--ink)' : 'var(--error)';
+      statSavingsBalance.style.color = leadAmount(balanceBuckets) >= 0 ? 'var(--ink)' : 'var(--error)';
     }
-    if (statTotalDeposits) animateNumber(statTotalDeposits, totalDeposits);
-    if (statTotalWithdrawals) animateNumber(statTotalWithdrawals, totalWithdrawals);
+    if (statTotalDeposits) setMoneyStat(statTotalDeposits, depositBuckets);
+    if (statTotalWithdrawals) setMoneyStat(statTotalWithdrawals, withdrawalBuckets);
     if (statSavingsGrowth) {
       statSavingsGrowth.textContent = savingsGrowth + '%';
       statSavingsGrowth.style.color = savingsGrowth >= 50 ? 'var(--good)' : 'var(--warning)';
     }
+  }
+
+  // Status strip: the configured number of accounts using this tracker.
+  const ACTIVE_USER_ACCOUNTS = 1;
+
+  function updateBankStatus(){
+    const users = $('bankActiveUsers');
+    if (users) users.textContent = fmtAmount(ACTIVE_USER_ACCOUNTS);
   }
 
   function renderAll(){
@@ -2528,6 +2855,9 @@
       
       // Always update stats for the current view
       updateStats();
+
+      // Keep the public status strip in step with the data that was just loaded
+      updateBankStatus();
     } catch (e) {
       console.error('Render failed:', e);
       showFatal('Something went wrong displaying your data. Try Refresh — your data in Supabase is untouched.');
@@ -2541,9 +2871,12 @@
       const monthExpenses = data.expenses.filter(e => monthKey(e.date) === selectedMonth);
       const monthIncome = data.income.filter(i => monthKey(i.date) === selectedMonth);
       
-      const totalExpense = monthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-      const totalIncome = monthIncome.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-      const netSavings = totalIncome - totalExpense;
+      const expenseBuckets = sumByCurrency(monthExpenses);
+      const incomeBuckets = sumByCurrency(monthIncome);
+      const netBuckets = addBuckets(incomeBuckets, expenseBuckets, -1);
+      // The rate is a ratio, so it is worked out inside one currency
+      const totalIncome = leadAmount(incomeBuckets);
+      const netSavings = leadAmount(netBuckets);
       const savingsRate = totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0;
       
       const statTotalExpense = $('statTotalExpense');
@@ -2551,10 +2884,10 @@
       const statNetSavings = $('statNetSavings');
       const statSavingsRate = $('statSavingsRate');
       
-      if (statTotalExpense) animateNumber(statTotalExpense, totalExpense);
-      if (statTotalIncome) animateNumber(statTotalIncome, totalIncome);
+      if (statTotalExpense) setMoneyStat(statTotalExpense, expenseBuckets);
+      if (statTotalIncome) setMoneyStat(statTotalIncome, incomeBuckets);
       if (statNetSavings) {
-        animateNumber(statNetSavings, netSavings);
+        setMoneyStat(statNetSavings, netBuckets);
         statNetSavings.style.color = netSavings >= 0 ? 'var(--ink)' : 'var(--error)';
       }
       if (statSavingsRate) {
@@ -2562,14 +2895,14 @@
         statSavingsRate.style.color = savingsRate >= 0 ? 'var(--good)' : 'var(--error)';
       }
     } else if (currentTab === 'debts') {
-      const unpaidTotal = data.debts.filter(d => d.status === 'unpaid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
-      const paidTotal = data.debts.filter(d => d.status === 'paid').reduce((s, d) => s + (Number(d.amount) || 0), 0);
+      const unpaidBuckets = sumByCurrency(data.debts.filter(d => d.status === 'unpaid'));
+      const paidBuckets = sumByCurrency(data.debts.filter(d => d.status === 'paid'));
       
       const statUnpaidDebt = $('statUnpaidDebt');
       const statPaidDebt = $('statPaidDebt');
       
-      if (statUnpaidDebt) animateNumber(statUnpaidDebt, unpaidTotal);
-      if (statPaidDebt) animateNumber(statPaidDebt, paidTotal);
+      if (statUnpaidDebt) setMoneyStat(statUnpaidDebt, unpaidBuckets);
+      if (statPaidDebt) setMoneyStat(statPaidDebt, paidBuckets);
     }
   }
 
@@ -2581,42 +2914,42 @@
     const monthExpenses = data.expenses.filter(e => monthKey(e.date) === currentMonth);
     const monthIncome = data.income.filter(i => monthKey(i.date) === currentMonth);
     
-    const totalMonthExpenses = monthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    const totalMonthIncome = monthIncome.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-    const netCashFlow = totalMonthIncome - totalMonthExpenses;
+    const expenseBuckets = sumByCurrency(monthExpenses);
+    const incomeBuckets = sumByCurrency(monthIncome);
+    const netBuckets = addBuckets(incomeBuckets, expenseBuckets, -1);
     
-    // Calculate total debt and savings
-    const totalDebt = data.debts.filter(d => d.status === 'unpaid').reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
-    const totalSavings = data.savings
-      .filter(s => s.type === 'deposit')
-      .reduce((sum, s) => sum + (Number(s.amount) || 0), 0) -
-      data.savings
-      .filter(s => s.type === 'withdrawal')
-      .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+    // Calculate total debt and savings, per currency
+    const debtBuckets = sumByCurrency(data.debts.filter(d => d.status === 'unpaid'));
+    const savingsBuckets = netByCurrency(
+      data.savings.filter(s => s.type === 'deposit'),
+      data.savings.filter(s => s.type === 'withdrawal')
+    );
     
-    // Calculate savings rate
+    // Calculate savings rate (a ratio, so compared inside one currency)
+    const totalMonthIncome = leadAmount(incomeBuckets);
+    const totalMonthExpenses = leadAmount(expenseBuckets);
     const savingsRate = totalMonthIncome > 0 ? ((totalMonthIncome - totalMonthExpenses) / totalMonthIncome * 100).toFixed(1) : 0;
     
     // Total transactions count
     const totalTransactions = data.expenses.length + data.income.length + data.savings.length + data.debts.length;
     
     // Update dashboard stats
-    animateNumber($('dashMonthlyIncome'), totalMonthIncome);
-    animateNumber($('dashMonthlyExpenses'), totalMonthExpenses);
+    setMoneyStat($('dashMonthlyIncome'), incomeBuckets);
+    setMoneyStat($('dashMonthlyExpenses'), expenseBuckets);
     
     const dashNetCashFlow = $('dashNetCashFlow');
     if (dashNetCashFlow) {
-      animateNumber(dashNetCashFlow, netCashFlow);
-      dashNetCashFlow.style.color = netCashFlow >= 0 ? 'var(--good)' : 'var(--error)';
+      setMoneyStat(dashNetCashFlow, netBuckets);
+      dashNetCashFlow.style.color = leadAmount(netBuckets) >= 0 ? 'var(--good)' : 'var(--error)';
     }
     
     const dashTotalDebt = $('dashTotalDebt');
-    if (dashTotalDebt) animateNumber(dashTotalDebt, totalDebt);
+    if (dashTotalDebt) setMoneyStat(dashTotalDebt, debtBuckets);
     
     const dashSavingsBalance = $('dashSavingsBalance');
     if (dashSavingsBalance) {
-      animateNumber(dashSavingsBalance, totalSavings);
-      dashSavingsBalance.style.color = totalSavings >= 0 ? 'var(--ink)' : 'var(--error)';
+      setMoneyStat(dashSavingsBalance, savingsBuckets);
+      dashSavingsBalance.style.color = leadAmount(savingsBuckets) >= 0 ? 'var(--ink)' : 'var(--error)';
     }
     
     const dashSavingsRate = $('dashSavingsRate');
@@ -2628,12 +2961,12 @@
     const dashTransactionsCount = $('dashTransactionsCount');
     if (dashTransactionsCount) dashTransactionsCount.textContent = totalTransactions;
     
-    // Calculate total balance
-    const totalBalance = totalSavings - totalDebt + (totalMonthIncome - totalMonthExpenses);
+    // Calculate total balance, per currency
+    const balanceBuckets = addBuckets(addBuckets(savingsBuckets, netBuckets), debtBuckets, -1);
     const dashTotalBalance = $('dashTotalBalance');
     if (dashTotalBalance) {
-      animateNumber(dashTotalBalance, totalBalance);
-      dashTotalBalance.style.color = totalBalance >= 0 ? 'var(--ink)' : 'var(--error)';
+      setMoneyStat(dashTotalBalance, balanceBuckets);
+      dashTotalBalance.style.color = leadAmount(balanceBuckets) >= 0 ? 'var(--ink)' : 'var(--error)';
     }
     
     // Render recent activity
@@ -2660,7 +2993,7 @@
     } else {
       recent.forEach(exp => {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + escapeHtml(exp.date) + '</td><td>' + escapeHtml(exp.category || 'Other') + '</td><td class="amount">' + fmtAmount(exp.amount) + '</td>';
+        tr.innerHTML = '<td>' + escapeHtml(exp.date) + '</td><td>' + escapeHtml(exp.category || 'Other') + '</td><td class="amount">' + fmtAmount(exp.amount) + ' ' + currencyOf(exp) + '</td>';
         tbody.appendChild(tr);
       });
     }
@@ -2680,7 +3013,7 @@
     } else {
       recent.forEach(inc => {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + escapeHtml(inc.date) + '</td><td>' + escapeHtml(inc.title || inc.category) + '</td><td class="amount">' + fmtAmount(inc.amount) + '</td>';
+        tr.innerHTML = '<td>' + escapeHtml(inc.date) + '</td><td>' + escapeHtml(inc.title || inc.category) + '</td><td class="amount">' + fmtAmount(inc.amount) + ' ' + currencyOf(inc) + '</td>';
         tbody.appendChild(tr);
       });
     }
@@ -2694,9 +3027,13 @@
     const ctx = document.getElementById('expenseCategoryChart');
     if (!ctx) return;
     
+    // Charts show one currency at a time (FRW unless the books mostly use
+    // another one), so the slices never mix currencies together.
+    const chartCurrency = accountCurrency();
+    
     // Aggregate expenses by category
     const categoryTotals = {};
-    monthExpenses.forEach(exp => {
+    rowsInCurrency(monthExpenses, chartCurrency).forEach(exp => {
       const cat = exp.category || 'Other';
       categoryTotals[cat] = (categoryTotals[cat] || 0) + (Number(exp.amount) || 0);
     });
@@ -2734,7 +3071,7 @@
                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                 const value = context.parsed;
                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                return ' ' + context.label + ': ' + fmtAmount(value) + ' (' + percentage + '%)';
+                return ' ' + context.label + ': ' + fmtAmount(value) + ' ' + chartCurrency + ' (' + percentage + '%)';
               }
             }
           }
@@ -2746,6 +3083,9 @@
   function updateIncomeExpenseChart(monthIncome, monthExpenses) {
     const ctx = document.getElementById('incomeExpenseChart');
     if (!ctx) return;
+    
+    // One currency per chart, so neither bars nor the y-axis mix FRW with USD
+    const chartCurrency = accountCurrency();
     
     // Group by month for last 6 months
     const months = [];
@@ -2760,8 +3100,8 @@
       
       months.push(monthLabel);
       
-      const monthInc = data.income.filter(i => monthKey(i.date) === monthKeyStr);
-      const monthExp = data.expenses.filter(e => monthKey(e.date) === monthKeyStr);
+      const monthInc = rowsInCurrency(data.income.filter(i => monthKey(i.date) === monthKeyStr), chartCurrency);
+      const monthExp = rowsInCurrency(data.expenses.filter(e => monthKey(e.date) === monthKeyStr), chartCurrency);
       
       incomeByMonth.push(monthInc.reduce((sum, i) => sum + (Number(i.amount) || 0), 0));
       expensesByMonth.push(monthExp.reduce((sum, e) => sum + (Number(e.amount) || 0), 0));
@@ -2801,7 +3141,7 @@
           tooltip: {
             callbacks: {
               label: function(context) {
-                return ' ' + context.dataset.label + ': ' + fmtAmount(context.parsed.y);
+                return ' ' + context.dataset.label + ': ' + fmtAmount(context.parsed.y) + ' ' + chartCurrency;
               }
             }
           }
@@ -2810,7 +3150,7 @@
           y: {
             beginAtZero: true,
             ticks: {
-              callback: function(value) { return fmtAmount(value); }
+              callback: function(value) { return fmtAmount(value) + ' ' + chartCurrency; }
             }
           }
         }
@@ -2824,11 +3164,12 @@
     const amount = parseFloat($('expAmount').value);
     const category = $('expCategory').value.trim();
     const description = $('expDesc').value.trim();
+    const currency = $('expCurrency').value || DEFAULT_CURRENCY;
     if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
 
-    const { error } = await sb.from('expenses').insert({ date, category, description, amount });
+    const { error } = await insertRow('expenses', { date, category, description, amount, currency });
     if (error) { showToast('Could not save: ' + error.message); return; }
-    $('expAmount').value = ''; $('expCategory').value = ''; $('expDesc').value = '';
+    $('expAmount').value = ''; $('expCategory').value = ''; $('expDesc').value = ''; $('expCurrency').value = DEFAULT_CURRENCY;
     showToast('Expense added.');
     fetchAll();
   });
@@ -2839,12 +3180,13 @@
     const amount = parseFloat($('debtAmount').value);
     const person = $('debtPerson').value.trim();
     const description = $('debtDesc').value.trim();
+    const currency = $('debtCurrency').value || DEFAULT_CURRENCY;
     if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
     if (!person) { showToast('Enter who the debt is with.'); return; }
 
-    const { error } = await sb.from('debts').insert({ date, person, description, amount, status: 'unpaid' });
+    const { error } = await insertRow('debts', { date, person, description, amount, status: 'unpaid', currency });
     if (error) { showToast('Could not save: ' + error.message); return; }
-    $('debtAmount').value = ''; $('debtPerson').value = ''; $('debtDesc').value = '';
+    $('debtAmount').value = ''; $('debtPerson').value = ''; $('debtDesc').value = ''; $('debtCurrency').value = DEFAULT_CURRENCY;
     showToast('Debt added.');
     fetchAll();
   });
@@ -2855,17 +3197,19 @@
     const category = $('incomeCategory').value;
     const description = $('incomeDesc').value.trim();
     const date = $('incomeDate').value || todayISO();
+    const currency = $('incomeCurrency').value || DEFAULT_CURRENCY;
     
     if (!title) { showToast('Enter a title.'); return; }
     if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
 
-    const { error } = await sb.from('income').insert({ title, category, description, amount, date });
+    const { error } = await insertRow('income', { title, category, description, amount, date, currency });
     if (error) { showToast('Could not save: ' + error.message); return; }
     
     // Clear form fields
     $('incomeTitle').value = ''; 
     $('incomeAmount').value = ''; 
     $('incomeDesc').value = '';
+    $('incomeCurrency').value = DEFAULT_CURRENCY;
     $('incomeDate').value = todayISO();
     
     showToast('Income added.');
@@ -2876,17 +3220,19 @@
     const type = $('savingsType').value;
     const amount = parseFloat($('savingsAmount').value);
     const reason = $('savingsReason').value.trim();
+    const currency = $('savingsCurrency').value || DEFAULT_CURRENCY;
     const date = $('savingsDate').value || new Date().toISOString();
     
     if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
     if (type === 'withdrawal' && !reason) { showToast('Reason is required for withdrawals.'); return; }
 
-    const { error } = await sb.from('savings').insert({ type, amount, reason: reason || (type === 'deposit' ? 'Savings deposit' : 'Savings withdrawal'), date });
+    const { error } = await insertRow('savings', { type, amount, reason: reason || (type === 'deposit' ? 'Savings deposit' : 'Savings withdrawal'), date, currency });
     if (error) { showToast('Could not save: ' + error.message); return; }
     
     // Clear form fields
     $('savingsAmount').value = ''; 
     $('savingsReason').value = '';
+    $('savingsCurrency').value = DEFAULT_CURRENCY;
     
     // Reset date to current time
     const now = new Date();
@@ -2913,7 +3259,8 @@
         row.classList.add('removing');
         await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
         const { error } = await sb.from('expenses').delete().eq('id', t.dataset.removeExpense);
-        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+        if (error) showToast('Could not remove: ' + error.message);
+        else { forgetCurrency('expenses', t.dataset.removeExpense); fetchAll(); }
       }
     } else if (t.dataset.removeIncome) {
       if (confirm('Remove this income entry?')) {
@@ -2921,7 +3268,8 @@
         row.classList.add('removing');
         await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
         const { error } = await sb.from('income').delete().eq('id', t.dataset.removeIncome);
-        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+        if (error) showToast('Could not remove: ' + error.message);
+        else { forgetCurrency('income', t.dataset.removeIncome); fetchAll(); }
       }
     } else if (t.dataset.removeSavings) {
       if (confirm('Remove this savings movement?')) {
@@ -2929,7 +3277,8 @@
         row.classList.add('removing');
         await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
         const { error } = await sb.from('savings').delete().eq('id', t.dataset.removeSavings);
-        if (error) showToast('Could not remove: ' + error.message); else fetchAll();
+        if (error) showToast('Could not remove: ' + error.message);
+        else { forgetCurrency('savings', t.dataset.removeSavings); fetchAll(); }
       }
     } else if (t.dataset.markPaid) {
       const { error } = await sb.from('debts').update({ status: 'paid', paid_date: todayISO() }).eq('id', t.dataset.markPaid);
@@ -2943,7 +3292,8 @@
         row.classList.add('removing');
         await new Promise(resolve => setTimeout(resolve, 300)); // Wait for animation
         const { error } = await sb.from('debts').delete().eq('id', t.dataset.removeDebt);
-        if (error) showToast('Could not delete: ' + error.message); else fetchAll();
+        if (error) showToast('Could not delete: ' + error.message);
+        else { forgetCurrency('debts', t.dataset.removeDebt); fetchAll(); }
       }
     }
   });
@@ -2988,6 +3338,9 @@
     const ctx = document.getElementById('activityOverviewChart');
     if (!ctx) return;
     
+    // One currency per chart (FRW by default), never a mixed-currency sum
+    const chartCurrency = accountCurrency();
+    
     // Calculate data for the last 6 months
     const months = [];
     const incomeData = [];
@@ -3004,18 +3357,18 @@
       months.push(monthLabel);
       
       // Income
-      const monthInc = data.income.filter(i => monthKey(i.date) === monthKeyStr);
+      const monthInc = rowsInCurrency(data.income.filter(i => monthKey(i.date) === monthKeyStr), chartCurrency);
       incomeData.push(monthInc.reduce((sum, i) => sum + (Number(i.amount) || 0), 0));
       
       // Expenses
-      const monthExp = monthExpenses.filter(e => monthKey(e.date) === monthKeyStr);
+      const monthExp = rowsInCurrency(monthExpenses.filter(e => monthKey(e.date) === monthKeyStr), chartCurrency);
       expenseData.push(monthExp.reduce((sum, e) => sum + (Number(e.amount) || 0), 0));
       
       // Savings (net of deposits - withdrawals)
-      const monthSavings = data.savings.filter(s => {
+      const monthSavings = rowsInCurrency(data.savings.filter(s => {
         const sDate = new Date(s.date);
         return sDate.getFullYear() === date.getFullYear() && sDate.getMonth() === date.getMonth();
-      });
+      }), chartCurrency);
       const netSavings = monthSavings
         .filter(s => s.type === 'deposit')
         .reduce((sum, s) => sum + (Number(s.amount) || 0), 0) -
@@ -3025,7 +3378,7 @@
       savingsData.push(netSavings);
       
       // Debts (new debts added this month)
-      const monthDebts = data.debts.filter(d => monthKey(d.date) === monthKeyStr && d.status === 'unpaid');
+      const monthDebts = rowsInCurrency(data.debts.filter(d => monthKey(d.date) === monthKeyStr && d.status === 'unpaid'), chartCurrency);
       debtData.push(monthDebts.reduce((sum, d) => sum + (Number(d.amount) || 0), 0));
     }
     
@@ -3099,7 +3452,7 @@
               label: function(context) {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
-                return ' ' + label + ': ' + fmtAmount(value);
+                return ' ' + label + ': ' + fmtAmount(value) + ' ' + chartCurrency;
               }
             }
           }
@@ -3117,9 +3470,9 @@
               font: { size: 11 },
               color: '#9CA3AF',
               callback: function(value) {
-                if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
-                else if (value >= 1000) return '$' + (value / 1000).toFixed(1) + 'K';
-                return '$' + value;
+                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M ' + chartCurrency;
+                else if (value >= 1000) return (value / 1000).toFixed(1) + 'K ' + chartCurrency;
+                return value + ' ' + chartCurrency;
               }
             }
           }
@@ -3140,6 +3493,233 @@
     else if (currentTab === 'dashboard') renderDashboard();
   });
 
+/* ---------------------------------------------------------
+     Live exchange rates for the ticker.
+     Two free, key-less feeds are tried in order. If the browser is offline
+     or both feeds fail, the last good reading is reused and labelled as a
+     saved copy; only when there is nothing saved at all does the ticker fall
+     back to a bundled estimate, and it says so. A rate is never shown as
+     "Live" unless it just came off the network.
+  --------------------------------------------------------- */
+  const FX_BASE = 'USD';
+  const FX_BOOK_CURRENCIES = ['RWF', 'CDF'];   // the currencies this book is kept in
+  const FX_DISPLAY = ['RWF', 'CDF', 'EUR', 'GBP', 'UGX', 'KES', 'JPY', 'CNY'];
+  const FX_CACHE_KEY = 'bwzFxRates:v1';
+  const FX_PREV_KEY = 'bwzFxPrevRates:v1';
+  const FX_MAX_AGE_MS = 6 * 60 * 60 * 1000;    // a saved reading is good for 6 hours
+  const FX_REFRESH_MS = 5 * 60 * 1000;         // then ask again every 5 minutes
+  const FX_TIMEOUT_MS = 10000;
+
+  /* Last-resort numbers, only used when nothing could be fetched or recalled.
+     Shown under an "Offline / Bundled estimate" label, never as live. */
+  const FX_SNAPSHOT = {
+    RWF: 1474.49, CDF: 2305.68, EUR: 0.8667, GBP: 0.7420,
+    UGX: 3756.66, KES: 129.53, JPY: 155.08, CNY: 6.7268
+  };
+
+  let fxTimer = null;
+  let fxInFlight = false;
+
+  function readJsonStore(key){
+    try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) { return null; }
+  }
+
+  function writeJsonStore(key, value){
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) { /* storage blocked or full */ }
+  }
+
+  function setFxStatus(state, label){
+    const pill = $('fxStatus');
+    if (!pill) return;
+    pill.dataset.state = state;
+    pill.textContent = label;
+  }
+
+  function setFxUpdated(text){
+    const el = $('fxUpdated');
+    if (el) el.textContent = text || '';
+  }
+
+  function fxClock(stamp){
+    if (!isFinite(stamp)) return '';
+    const d = new Date(stamp);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
+      d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* Minor-unit currencies (RWF, CDF, JPY) read better with 2 decimals; the
+     big-ticket ones (EUR, GBP) need 4 to be meaningful. */
+  function formatFxRate(value){
+    if (!isFinite(value) || value <= 0) return 'N/A';
+    return value >= 10 ? value.toFixed(2) : value.toFixed(4);
+  }
+
+  function createCurrencyPair(code, rate, change, isPositive, isBook){
+    const changeHtml = (change === null || change === undefined)
+      ? ''
+      : '<span class="currency-change ' + (isPositive ? 'positive' : 'negative') + '">' +
+          (isPositive ? '+' : '') + change + '%</span>';
+    return '<span class="currency-pair' + (isBook ? ' is-book' : '') + '">' +
+      '<span class="currency-code">' + code + '</span>' +
+      '<span class="currency-rate">' + rate + '</span>' + changeHtml +
+      '</span>';
+  }
+
+  /* Move against the previous reading, so the arrow means something real. */
+  function fxChange(code, rate, previous){
+    const before = previous ? Number(previous[code]) : NaN;
+    if (!isFinite(before) || before <= 0 || !isFinite(rate) || rate <= 0) {
+      return { text: null, positive: true };
+    }
+    const pct = ((rate - before) / before) * 100;
+    return { text: pct.toFixed(2), positive: pct >= 0 };
+  }
+
+  function renderTicker(rates, previous){
+    const track = document.querySelector('.ticker-content');
+    if (!track) return;
+    const parts = FX_DISPLAY.map(code => {
+      const rate = rates ? Number(rates[code]) : NaN;
+      const move = fxChange(code, rate, previous);
+      return createCurrencyPair(
+        code,
+        formatFxRate(rate),
+        move.text,
+        move.positive,
+        FX_BOOK_CURRENCIES.indexOf(code) !== -1
+      );
+    });
+    track.innerHTML = parts.join('<span class="ticker-separator">|</span>');
+  }
+
+  /* Fetch JSON with a timeout, so one hanging feed cannot stall the ticker. */
+  async function fetchJson(url, timeoutMs){
+    const controller = (typeof AbortController === 'function') ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), timeoutMs || FX_TIMEOUT_MS) : null;
+    try {
+      const response = await fetch(url, controller ? { signal: controller.signal } : undefined);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return await response.json();
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  /* open.er-api.com: { result, base_code, time_last_update_unix, rates:{ RWF.. } } */
+  function parseErApi(payload){
+    if (!payload || payload.result !== 'success' || !payload.rates) throw new Error('unexpected payload');
+    const stamp = payload.time_last_update_unix ? payload.time_last_update_unix * 1000 : Date.now();
+    return { rates: payload.rates, updated: stamp, source: 'open.er-api.com' };
+  }
+
+  /* currency-api on jsDelivr: { date, usd: { rwf, cdf, eur, ... } } in lower case */
+  function parseCurrencyApi(payload){
+    const table = payload && (payload[FX_BASE.toLowerCase()] || payload.usd);
+    if (!table) throw new Error('unexpected payload');
+    const rates = {};
+    FX_DISPLAY.forEach(code => {
+      const value = Number(table[code.toLowerCase()]);
+      if (isFinite(value) && value > 0) rates[code] = value;
+    });
+    if (!rates.RWF && !rates.CDF) throw new Error('feed has no RWF/CDF');
+    const stamp = Date.parse(payload.date || '');
+    return { rates: rates, updated: isFinite(stamp) ? stamp : Date.now(), source: 'currency-api' };
+  }
+
+  /* Both feeds are public and key-less on purpose: nothing to configure. */
+  const FX_SOURCES = [
+    { url: 'https://open.er-api.com/v6/latest/' + FX_BASE, parse: parseErApi },
+    {
+      url: 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/' + FX_BASE.toLowerCase() + '.json',
+      parse: parseCurrencyApi
+    }
+  ];
+
+  async function fetchLiveRates(){
+    for (let i = 0; i < FX_SOURCES.length; i++) {
+      const source = FX_SOURCES[i];
+      try {
+        const payload = await fetchJson(source.url);
+        return source.parse(payload);
+      } catch (error) {
+        console.warn('FX feed unavailable (' + source.url + '): ' + (error && error.message));
+      }
+    }
+    return null;
+  }
+
+  function cachedFxRates(){
+    const cached = readJsonStore(FX_CACHE_KEY);
+    if (!cached || !cached.rates || !cached.fetchedAt) return null;
+    if (Date.now() - cached.fetchedAt > FX_MAX_AGE_MS) return null;
+    return cached;
+  }
+
+  /* Paint the ticker, then record the reading so the next change % is real. */
+  function applyFxRates(rates, meta){
+    const previous = (meta && meta.previous) || {};
+    renderTicker(rates, previous);
+
+    if (meta.state === 'live') {
+      writeJsonStore(FX_CACHE_KEY, { rates: rates, fetchedAt: Date.now(), updated: meta.updated, source: meta.source });
+      writeJsonStore(FX_PREV_KEY, rates);
+      setFxStatus('live', 'Live');
+      setFxUpdated('Updated ' + fxClock(meta.updated));
+      return;
+    }
+    if (meta.state === 'cached') {
+      setFxStatus('cached', 'Saved copy');
+      setFxUpdated('Updated ' + fxClock(meta.updated));
+      return;
+    }
+    setFxStatus('offline', 'Offline');
+    setFxUpdated('Bundled estimate');
+  }
+
+  function showSavedOrSnapshot(){
+    const cached = cachedFxRates();
+    const previous = cached ? (readJsonStore(FX_PREV_KEY) || {}) : {};
+    if (cached) {
+      applyFxRates(cached.rates, { state: 'cached', updated: cached.updated || cached.fetchedAt, previous: previous });
+      return;
+    }
+    applyFxRates(FX_SNAPSHOT, { state: 'offline', updated: null, previous: previous });
+  }
+
+  async function refreshFxTicker(){
+    if (fxInFlight) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      showSavedOrSnapshot();
+      return;
+    }
+
+    fxInFlight = true;
+    const cached = readJsonStore(FX_CACHE_KEY);
+    const previous = (cached && cached.rates) ? cached.rates : (readJsonStore(FX_PREV_KEY) || {});
+    try {
+      const live = await fetchLiveRates();
+      if (live) {
+        applyFxRates(live.rates, { state: 'live', updated: live.updated, source: live.source, previous: previous });
+        return;
+      }
+      showSavedOrSnapshot();
+    } finally {
+      fxInFlight = false;
+    }
+  }
+
+  function startFxTicker(){
+    refreshFxTicker();
+    if (fxTimer) clearInterval(fxTimer);
+    fxTimer = setInterval(refreshFxTicker, FX_REFRESH_MS);
+  }
+
+  /* Keep the ticker honest about connectivity: refresh when the browser comes
+     back online or when the tab is brought to the front again. */
+  window.addEventListener('online', () => { setFxStatus('live', 'Reconnecting...'); refreshFxTicker(); });
+  window.addEventListener('offline', showSavedOrSnapshot);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshFxTicker(); });
+  window.addEventListener('beforeunload', () => { if (fxTimer) clearInterval(fxTimer); });
   /* ---------- init ---------- */
   $('expDate').value = todayISO();
   $('debtDate').value = todayISO();
@@ -3163,8 +3743,17 @@
   $('authEmail').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('authPassword').focus(); });
   $('authPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('signInBtn').click(); });
 
+  // Initialize the Active Users display.
+  updateBankStatus();
+
   // Initialize tab navigation
   switchTab('expenses');
+
+  // Warn straight away if this database still needs the currency migration.
+  probeCurrencyColumn();
+
+  // Start the live exchange-rate ticker (falls back to saved rates offline).
+  startFxTicker();
   
   // Initialize savings form state
   const reasonRequiredInit = $('reasonRequired');
