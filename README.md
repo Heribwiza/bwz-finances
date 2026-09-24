@@ -199,6 +199,24 @@ If GitHub Pages is not yet enabled:
 - Row Level Security (RLS) enabled on all tables
 - Never commit service_role keys or secrets
 
+## One-word publish (Windows)
+
+Type **`Alino`** in any terminal (any folder) and press Enter. It saves your
+changes, copies them onto the published `main` branch, pushes to GitHub and
+then waits until https://heribwiza.github.io/bwz-finances/ is really serving
+the new build, printing `LIVE` when it is.
+
+The command lives at `%LOCALAPPDATA%\Microsoft\WindowsApps\Alino.cmd` (a
+folder that is already on your `PATH`). It needs the repository owner's GitHub
+login once:
+
+```powershell
+& "C:\Program Files\Git\mingw64\bin\git-credential-manager.exe" github login --device --username Heribwiza
+```
+
+Local-only development files (`*.py` helpers, `finance_tracker_backup.html`)
+are listed in `.git/info/exclude`, so `Alino` never publishes them.
+
 ## License
 
 Private - All rights reserved
