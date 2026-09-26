@@ -36,12 +36,12 @@ jobs:
         env:
           SMTP_HOST: 'smtp.gmail.com'
           SMTP_PORT: '465'
-          SMTP_USER: ${{ secrets.NOTIF_SMTP_USER || 'hheribwiza1@gmail.com' }}
-          SMTP_PASSWORD: ${{ secrets.NOTIF_SMTP_PASSWORD || 'vrsl pkvf nbto dxre' }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL || 'hheribwiza1@gmail.com' }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://sxcshkumjmlweyclttsc.supabase.co' }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_D_zIvEZOkr_578iWWq-PgA_N0ppMr6k' }}
+          SMTP_USER: ${{ secrets.NOTIF_SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.NOTIF_SMTP_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
           ACTION="${{ github.event.inputs.action }}"
           if [ -z "$ACTION" ]; then
