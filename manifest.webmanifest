@@ -1,0 +1,24 @@
+{
+  "name": "BWZ CORPORATION Finance Tracker",
+  "short_name": "BWZ Finances",
+  "description": "Track expenses, income, savings and debts - kept in Rwandan francs, with USD and CDF per entry.",
+  "lang": "en",
+  "start_url": "./finance_tracker.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0f0f1a",
+  "theme_color": "#10B981",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Add an expense", "short_name": "Expense", "url": "./finance_tracker.html#expenses" },
+    { "name": "Dashboard", "short_name": "Home", "url": "./finance_tracker.html#dashboard" },
+    { "name": "Debts", "short_name": "Debts", "url": "./finance_tracker.html#debts" }
+  ]
+}
