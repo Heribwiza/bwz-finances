@@ -1,0 +1,57 @@
+name: Scheduled Notifications & Queue Dispatcher
+
+on:
+  schedule:
+    # 6:00 PM CAT (Central Africa Time, UTC+2) is 16:00 UTC (4 PM UTC).
+    # Runs everyday at 16:00 UTC = 18:00 (6:00 PM) CAT
+    - cron: '0 16 * * *'
+    # Optional regular queue check every 30 minutes to dispatch pending alerts
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to run (all, savings, summary, queue)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - savings
+          - summary
+          - queue
+
+jobs:
+  notifications:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Notifications Dispatcher
+        env:
+          SMTP_HOST: 'smtp.gmail.com'
+          SMTP_PORT: '465'
+          SMTP_USER: ${{ secrets.NOTIF_SMTP_USER || 'hheribwiza1@gmail.com' }}
+          SMTP_PASSWORD: ${{ secrets.NOTIF_SMTP_PASSWORD || 'vrsl pkvf nbto dxre' }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL || 'hheribwiza1@gmail.com' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://sxcshkumjmlweyclttsc.supabase.co' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_D_zIvEZOkr_578iWWq-PgA_N0ppMr6k' }}
+        run: |
+          ACTION="${{ github.event.inputs.action }}"
+          if [ -z "$ACTION" ]; then
+            # Check current hour in UTC: if 16:00 UTC (18:00 CAT), run daily reports (savings + summary)
+            CURRENT_HOUR=$(date -u +%H)
+            if [ "$CURRENT_HOUR" = "16" ]; then
+              ACTION="all"
+            else
+              ACTION="queue"
+            fi
+          fi
+          echo "Executing notification action: $ACTION"
+          python scripts/send_email_notifications.py "$ACTION"
