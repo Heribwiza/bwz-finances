@@ -142,6 +142,38 @@ Two limits worth knowing:
 - Once the column really holds a foreign currency, the **database always wins**
   over anything remembered, so this can never override correct data.
 
+## Automated Email Notifications
+
+The system includes automated email notifications delivered to `hheribwiza1@gmail.com`:
+
+1. **Daily Savings Status Alert at 6:00 PM CAT:**
+   - Every day at 6:00 PM Central Africa Time (16:00 UTC), GitHub Actions runs `scheduled_notifications.yml`.
+   - Compiles total net savings partitioned across RWF, USD, and CDF, listing all deposits and withdrawals logged today.
+
+2. **Daily Transactions Summary at 6:00 PM CAT:**
+   - Summarizes all expenses, incomes, debts, and savings movements made during the day.
+
+3. **Instant Transaction Alerts:**
+   - When any transaction (expense, debt, income, or savings movement) is recorded in the application, a transaction notification is logged and dispatched.
+
+4. **Security Login Alerts:**
+   - Every sign-in on your account automatically logs a login audit record and dispatches an alert email indicating the account email, date/time, and client device.
+
+### Setting Up the Notification Tables in Supabase
+
+Run `setup_notifications.sql` in your Supabase SQL Editor once:
+- Creates `notification_queue` for queuing notifications.
+- Creates `login_records` with Row-Level Security for login auditing.
+
+### GitHub Secrets Configuration (Optional / Recommended)
+
+In your GitHub repository (**Settings** → **Secrets and variables** → **Actions**):
+- `NOTIF_SMTP_USER`: `hheribwiza1@gmail.com`
+- `NOTIF_SMTP_PASSWORD`: `vrsl pkvf nbto dxre`
+- `ADMIN_EMAIL`: `hheribwiza1@gmail.com`
+- `SUPABASE_SERVICE_ROLE_KEY`: *(Optional, from Supabase Dashboard -> Project Settings -> API)*
+
+
 ## Deployment
 
 This project is deployed via **GitHub Pages** with **GitHub Actions** automation. Every push to the `master` branch automatically triggers a deployment.
