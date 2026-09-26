@@ -11,8 +11,8 @@
 <meta name="apple-mobile-web-app-title" content="BWZ Finances">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%2310B981'/%3E%3Ctext x='50' y='68' font-size='42' font-family='sans-serif' font-weight='700' fill='%23FFFFFF' text-anchor='middle'%3EBWZ%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%2310B981'/%3E%3Ctext x='50' y='68' font-size='42' font-family='sans-serif' font-weight='700' fill='%23FFFFFF' text-anchor='middle'%3EBWZ%3C/text%3E%3C/svg%3E">
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22BWZ%20CORPORATION%20Finance%20Tracker%22%2C%22short_name%22%3A%22BWZ%20Finances%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%23F9FAFB%22%2C%22theme_color%22%3A%22%2310B981%22%7D">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -57,6 +57,24 @@
     --spacing-lg: 24px;
     --spacing-xl: 32px;
     --spacing-2xl: 48px;
+
+    /* Legacy names still referenced by older rules - alias them so cards,
+       tables, buttons and the red/green figures render as designed. */
+    --ink: var(--text-primary);
+    --ink-soft: var(--text-secondary);
+    --paper: var(--bg-elevated);
+    --background-alt: rgba(255,255,255,0.045);
+    --border: var(--border-color);
+    --error: var(--danger);
+    --error-light: var(--danger-bg);
+    --good: var(--primary);
+    --good-light: var(--primary-bg);
+    --primary-light: var(--primary-bg);
+
+    /* App shell (footer nav, sheets, safe areas) */
+    --nav-h: 66px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-t: env(safe-area-inset-top, 0px);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   
@@ -1329,6 +1347,200 @@
     }
   }
 
+  /* ==========================================================
+     APP SHELL - mobile-app look: sticky top bar, footer tab bar,
+     floating action button, bottom-sheet forms, safe areas, PWA
+     ========================================================== */
+  :root{ color-scheme: dark; }
+  html{ -webkit-text-size-adjust:100%; overflow-x: hidden; }
+
+  body{
+    padding: var(--safe-t) 0 0;
+    background:
+      radial-gradient(1100px 520px at 10% -12%, rgba(16,185,129,.10), transparent 60%),
+      radial-gradient(900px 460px at 100% 0%, rgba(59,130,246,.10), transparent 55%),
+      var(--bg-primary);
+    background-attachment: fixed;
+  }
+
+  /* ---------- top app bar ---------- */
+  .app-topbar{
+    position: sticky; top: 0; z-index: 40;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 10px 0 12px;
+    background: rgba(15,15,26,.88);
+    background: color-mix(in srgb, var(--bg-primary) 86%, transparent);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .app-brand{ display: flex; align-items: center; gap: 12px; padding: 0 var(--spacing-md); }
+  .app-logo{
+    width: 40px; height: 40px; flex: 0 0 auto; border-radius: 13px;
+    background: linear-gradient(135deg, var(--primary), #34D399);
+    color: #052e21; font-weight: 800; font-size: 12px; letter-spacing: .04em;
+    display: grid; place-items: center; box-shadow: var(--shadow-md);
+  }
+  .app-brand-text{ min-width: 0; }
+  .app-brand-text h1{ font-size: 16px; font-weight: 700; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+  .app-brand-text .subtitle{ margin: 0; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
+  .app-brand .sync-status{ margin-left: auto; flex: 0 0 auto; font-size: 11px; padding: 5px 10px; }
+  .app-actions{
+    display: flex; align-items: center; gap: 8px; padding: 0 var(--spacing-md);
+    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .app-actions::-webkit-scrollbar{ display: none; }
+  .app-actions .btn{ flex: 0 0 auto; border-radius: var(--radius-full); }
+  .app-search{
+    flex: 1 1 150px; min-width: 128px; padding: 9px 14px; font-size: 14px; font-family: inherit;
+    background: var(--bg-input); color: var(--text-primary); outline: none;
+    border: 1px solid var(--border-color); border-radius: var(--radius-full);
+  }
+  .app-search:focus{ border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+
+  .wrap{ padding: var(--spacing-lg) var(--spacing-md) calc(var(--nav-h) + var(--safe-b) + var(--spacing-2xl)); }
+  .banking-elements{ padding: var(--spacing-md) var(--spacing-md) 0; }
+
+  /* App chrome only exists once somebody is signed in */
+  body:not(.app-ready) .app-nav,
+  body:not(.app-ready) .fab,
+  body:not(.app-ready) .sheet-backdrop{ display: none !important; }
+
+  /* ---------- footer tab bar ---------- */
+  .app-nav{
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    height: calc(var(--nav-h) + var(--safe-b)); padding-bottom: var(--safe-b);
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    background: rgba(26,26,46,.96);
+    background: color-mix(in srgb, var(--bg-secondary) 94%, transparent);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -10px 30px rgba(0,0,0,.38);
+  }
+  .app-nav-btn{
+    appearance: none; background: none; border: 0; cursor: pointer; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 44px; padding: 9px 2px 6px;
+    color: var(--text-muted); font-family: inherit; font-size: 10px; font-weight: 600;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app-nav-btn svg{ width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .app-nav-btn:active{ transform: scale(.92); }
+  .app-nav-btn.active{ color: var(--primary); }
+  .app-nav-btn.active::before{
+    content: ''; position: absolute; top: 1px; width: 26px; height: 3px;
+    border-radius: 0 0 4px 4px; background: var(--primary); box-shadow: 0 0 12px var(--primary);
+  }
+  .app-nav-btn .nav-badge{
+    position: absolute; top: 6px; left: 50%; margin-left: 4px;
+    min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
+    background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; line-height: 1;
+    display: none; align-items: center; justify-content: center;
+  }
+  .app-nav-btn .nav-badge.show{ display: inline-flex; }
+  @media (min-width: 900px){
+    .app-nav{
+      left: 50%; right: auto; transform: translateX(-50%);
+      width: min(680px, calc(100% - 32px)); bottom: 14px;
+      height: var(--nav-h); padding-bottom: 0;
+      border: 1px solid var(--border-light); border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl);
+    }
+  }
+  /* ---------- floating action button ---------- */
+  .fab{
+    position: fixed; z-index: 65; right: 16px;
+    bottom: calc(var(--nav-h) + var(--safe-b) + 16px);
+    width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff; display: none; place-items: center;
+    box-shadow: 0 12px 26px rgba(16,185,129,.32), var(--shadow-lg);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--transition-fast);
+  }
+  .fab svg{ width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  .fab.show{ display: grid; animation: fabIn .26s cubic-bezier(.22,1,.36,1); }
+  .fab:active{ transform: scale(.9); }
+  /* scale only - the button must never be left invisible if the animation is paused */
+  @keyframes fabIn{ from{ transform: scale(.7) } to{ transform: scale(1) } }
+  @media (min-width: 900px){
+    .fab{ right: 24px; bottom: calc(var(--nav-h) + 30px); }
+  }
+  /* keep toasts clear of the footer menu */
+  .toast{ bottom: calc(var(--nav-h) + var(--safe-b) + 18px); }
+
+  /* ---------- bottom-sheet forms ---------- */
+  .sheet-backdrop{
+    position: fixed; inset: 0; z-index: 70; background: rgba(3,6,18,.62);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity .22s ease;
+  }
+  .sheet-backdrop.show{ opacity: 1; pointer-events: auto; }
+  body.sheet-visible{ overflow: hidden; }
+
+  /* the inline "add" cards live in a sheet, opened by the FAB */
+  .section-container > .card.no-print{ display: none; }
+  .card.sheet-open,
+  .section-container > .card.no-print.sheet-open{
+    display: block; position: fixed; z-index: 80;
+    left: 0; right: 0; bottom: 0; margin: 0 auto;
+    width: auto; max-width: 640px;
+    max-height: 88vh; overflow-y: auto; overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 var(--spacing-lg) calc(var(--spacing-xl) + var(--safe-b));
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    box-shadow: 0 -24px 60px rgba(0,0,0,.55);
+    animation: sheetUp .3s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes sheetUp{ from{ transform: translateY(100%) } to{ transform: translateY(0) } }
+  .card.sheet-open > h2{ display: none; }
+  .sheet-head{
+    position: sticky; top: 0; z-index: 2;
+    display: flex; align-items: center; gap: 12px;
+    margin: 0 calc(var(--spacing-lg) * -1) var(--spacing-md);
+    padding: 14px var(--spacing-lg) 12px;
+    background: var(--bg-card); border-bottom: 1px solid var(--border-color);
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .sheet-head::before{
+    content: ''; position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    width: 40px; height: 4px; border-radius: 999px; background: var(--border-light);
+  }
+  .sheet-title{ font-size: 16px; font-weight: 700; padding-top: 4px; }
+  .sheet-close{
+    margin-left: auto; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid var(--border-color); background: var(--bg-elevated);
+    color: var(--text-secondary); font-size: 14px; line-height: 1; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sheet-close:active{ transform: scale(.92); }
+  .card.sheet-open .btn-primary{ width: 100%; justify-content: center; }
+
+  /* ---------- mobile refinements ---------- */
+  @media (max-width: 768px){
+    .security-badges-row, .bank-info-bar{ display: none !important; }
+    .field input, .field select, .app-search{ font-size: 16px; }   /* stops iOS zoom-on-focus */
+    .card{ padding: var(--spacing-md); border-radius: var(--radius-lg); }
+    .card.sheet-open{ padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
+    .sheet-head{
+      margin-left: calc(var(--spacing-md) * -1); margin-right: calc(var(--spacing-md) * -1);
+      padding-inline: var(--spacing-md);
+    }
+    th, td{ padding: 10px 8px; }
+    table{ font-size: 13px; }
+    .card{ overflow-x: auto; -webkit-overflow-scrolling: touch; }  /* wide tables scroll inside their card */
+  }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+  @media print{
+    .app-nav, .fab, .sheet-backdrop, .app-topbar{ display: none !important; }
+    .wrap{ padding: 0; }
+  }
 </style>
 </head>
 <body>
@@ -1442,35 +1654,31 @@
 
 <!-- ============ APP SCREEN ============ -->
 <div class="wrap" id="appScreen">
-  <h1>BWZ CORPORATION</h1>
-  <p class="subtitle">Comprehensive finance tracker for expense, income, savings, and debt management.</p>
+  <header class="app-topbar no-print">
+    <div class="app-brand">
+      <div class="app-logo" aria-hidden="true">BWZ</div>
+      <div class="app-brand-text">
+        <h1>BWZ CORPORATION</h1>
+        <p class="subtitle">Finance Tracker</p>
+      </div>
+      <div class="sync-status connected" id="syncStatus">Synced with your account</div>
+    </div>
+    <div class="app-actions">
+      <input type="text" id="globalSearch" class="app-search" placeholder="Search transactions..." aria-label="Search transactions">
+      <button class="btn btn-ghost btn-small" id="installBtn" type="button" style="display:none">Install app</button>
+      <button class="btn btn-ghost btn-small" id="refreshBtn" type="button">Refresh</button>
+      <button class="btn btn-ghost btn-small" id="exportBtn" type="button">Export</button>
+      <button class="btn btn-ghost btn-small" id="importBtn" type="button">Import</button>
+      <button class="btn btn-ghost btn-small" id="signOutBtn" type="button">Sign out</button>
+      <input type="file" id="importInput" accept="application/json" style="display:none">
+    </div>
+  </header>
 
   <div class="fatal-banner no-print" id="fatalBanner"></div>
 
   <div class="setup-banner no-print" id="setupBanner" role="status" aria-live="polite"></div>
 
-  <div class="sync-bar no-print">
-    <div>
-      <div class="sync-status connected" id="syncStatus">Synced with your account</div>
-    </div>
-    <div class="btn-row">
-      <input type="text" id="globalSearch" placeholder="Search transactions..." style="padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px; width: 200px; background: var(--paper);">
-      <button class="btn btn-ghost btn-small" id="refreshBtn">Refresh</button>
-      <button class="btn btn-ghost btn-small" id="exportBtn">Export backup (.json)</button>
-      <button class="btn btn-ghost btn-small" id="importBtn">Import backup (.json)</button>
-      <button class="btn btn-ghost btn-small" id="signOutBtn">Sign out</button>
-      <input type="file" id="importInput" accept="application/json" style="display:none">
-    </div>
-  </div>
-
-  <!-- Tab Navigation -->
-  <nav class="tab-nav no-print">
-    <button class="tab-btn" data-tab="dashboard">Dashboard</button>
-    <button class="tab-btn active" data-tab="expenses">Expenses</button>
-    <button class="tab-btn" data-tab="income">Income</button>
-    <button class="tab-btn" data-tab="savings">Savings</button>
-    <button class="tab-btn" data-tab="debts">Debts</button>
-  </nav>
+  <!-- Menu moved to the footer app bar (see .app-nav at the end of the app screen) -->
 
   <!-- Dashboard Section -->
   <div class="section-container" id="dashboardSection">
@@ -1899,6 +2107,37 @@
   <div class="toast" id="toast"></div>
 </div>
 
+<!-- ===== App chrome: footer menu, floating add button, sheet backdrop ===== -->
+<nav class="app-nav no-print" id="appNav" aria-label="Main">
+  <button class="app-nav-btn" data-tab="dashboard" type="button" aria-label="Dashboard">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+    <span class="app-nav-label">Dashboard</span>
+  </button>
+  <button class="app-nav-btn" data-tab="expenses" type="button" aria-label="Expenses">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18l-2.6-1.6L14 21l-2-1.4L10 21l-2.4-1.6L5 21z"/><path d="M9 8h6"/><path d="M9 12h6"/></svg>
+    <span class="app-nav-label">Expenses</span>
+  </button>
+  <button class="app-nav-btn" data-tab="income" type="button" aria-label="Income">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11"/><path d="M7 9l5 5 5-5"/><path d="M4 21h16"/></svg>
+    <span class="app-nav-label">Income</span>
+  </button>
+  <button class="app-nav-btn" data-tab="savings" type="button" aria-label="Savings">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v6c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-6"/><path d="M5 11.5v6c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-6"/></svg>
+    <span class="app-nav-label">Savings</span>
+  </button>
+  <button class="app-nav-btn" data-tab="debts" type="button" aria-label="Debts">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M2.5 10h19"/><path d="M6 14.5h4"/></svg>
+    <span class="app-nav-label">Debts</span>
+    <span class="nav-badge" id="navDebtBadge"></span>
+  </button>
+</nav>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+<button class="fab no-print" id="fab" type="button" aria-label="Add a new entry">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
 <script>
   /* ---------------------------------------------------------
      Supabase connection.
@@ -2154,6 +2393,7 @@
     if (!saved.error) {
       const persisted = Array.isArray(saved.data) ? saved.data[0] : saved.data;
       if (persisted && persisted.id !== undefined) rememberCurrency(table, persisted.id, row.currency);
+      closeSheet();   // entry saved - put the add form away
       return { error: null };
     }
 
@@ -2166,6 +2406,7 @@
       if (retry.error) return { error: retry.error };
       const persisted = Array.isArray(retry.data) ? retry.data[0] : retry.data;
       if (persisted && persisted.id !== undefined) rememberCurrency(table, persisted.id, row.currency);
+      closeSheet();
       return { error: null };
     }
     return { error: saved.error };
@@ -2296,26 +2537,28 @@
 
   /* ---------- tab navigation ---------- */
   function switchTab(tabName) {
+    closeSheet();
     currentTab = tabName;
-    
-    // Update tab buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.remove('active');
-      if (btn.dataset.tab === tabName) {
-        btn.classList.add('active');
-      }
+    document.body.dataset.tab = tabName;
+
+    // Update every menu button (footer app bar, plus any legacy tab button)
+    document.querySelectorAll('.tab-btn, .app-nav-btn').forEach(btn => {
+      const on = btn.dataset.tab === tabName;
+      btn.classList.toggle('active', on);
+      if (on) { btn.setAttribute('aria-current', 'page'); } else { btn.removeAttribute('aria-current'); }
     });
-    
+
     // Update section visibility
     document.querySelectorAll('.section-container').forEach(section => {
       section.classList.remove('active');
     });
-    
+
     const activeSection = document.getElementById(tabName + 'Section');
     if (activeSection) {
       activeSection.classList.add('active');
     }
-    
+    updateFab();
+
     // Re-render relevant data
     if (tabName === 'dashboard') {
       renderDashboard();
@@ -2330,10 +2573,22 @@
     }
   }
 
-  // Tab button click handlers
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // Menu button click handlers (footer app bar + legacy tab buttons)
+  document.querySelectorAll('.tab-btn, .app-nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      switchTab(btn.dataset.tab);
+      const tabName = btn.dataset.tab;
+      if (!tabName) return;
+      if (tabName === currentTab) {              // tapping the active tab scrolls back to the top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (navigator.vibrate) { try { navigator.vibrate(8); } catch (_) {} }
+      if (typeof document.startViewTransition === 'function') {
+        document.startViewTransition(() => switchTab(tabName));
+      } else {
+        switchTab(tabName);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
 
@@ -2363,6 +2618,7 @@
       currentUserId = session.user.id;
       $('authScreen').style.display = 'none';
       $('appScreen').style.display = 'block';
+      document.body.classList.add('app-ready');   // show the footer menu, FAB and sheets
       subscribeRealtime();
       fetchAll();
     } else {
@@ -2371,6 +2627,8 @@
       // Clear the previous account's data on sign-out.
       data = { expenses: [], debts: [], income: [], savings: [] };
       updateBankStatus();
+      closeSheet();
+      document.body.classList.remove('app-ready');
       $('authScreen').style.display = 'block';
       $('appScreen').style.display = 'none';
     }
@@ -2856,8 +3114,9 @@
       // Always update stats for the current view
       updateStats();
 
-      // Keep the public status strip in step with the data that was just loaded
+      // Keep the public status strip and the footer badge in step with the data
       updateBankStatus();
+      updateNavBadges();
     } catch (e) {
       console.error('Render failed:', e);
       showFatal('Something went wrong displaying your data. Try Refresh — your data in Supabase is untouched.');
@@ -3720,6 +3979,135 @@
   window.addEventListener('offline', showSavedOrSnapshot);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshFxTicker(); });
   window.addEventListener('beforeunload', () => { if (fxTimer) clearInterval(fxTimer); });
+  /* ---------------------------------------------------------
+     App shell: footer menu behaviour, floating add button,
+     bottom-sheet forms, unpaid-debt badge and install prompt.
+  --------------------------------------------------------- */
+  let sheetCard = null;
+  let sheetOrigin = null;
+
+  function activeFormCard(){
+    return document.querySelector('.section-container.active > .card.no-print');
+  }
+
+  /* Open the current tab's add form as a bottom sheet. */
+  function openSheet(){
+    const card = activeFormCard();
+    if (!card) return;
+    closeSheet();
+
+    if (!card.querySelector('.sheet-head')) {
+      const head = document.createElement('div');
+      head.className = 'sheet-head';
+
+      const title = document.createElement('span');
+      title.className = 'sheet-title';
+      const h2 = card.querySelector('h2');
+      title.textContent = h2 ? h2.textContent.trim() : 'New entry';
+
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'sheet-close';
+      close.setAttribute('aria-label', 'Close');
+      close.textContent = '✕';
+      close.addEventListener('click', closeSheet);
+
+      head.appendChild(title);
+      head.appendChild(close);
+      card.insertBefore(head, card.firstChild);
+    }
+
+    // Move the card out of the animated page wrapper so position:fixed is
+    // measured against the viewport; remember where to put it back.
+    sheetCard = card;
+    sheetOrigin = { parent: card.parentNode, next: card.nextSibling };
+    document.body.appendChild(card);
+    card.classList.add('sheet-open');
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-modal', 'true');
+
+    const backdrop = $('sheetBackdrop');
+    if (backdrop) backdrop.classList.add('show');
+    document.body.classList.add('sheet-visible');
+    updateFab();
+
+    const first = card.querySelector('input:not([type="hidden"]), select');
+    if (first) setTimeout(() => { try { first.focus({ preventScroll: true }); } catch (_) {} }, 280);
+  }
+
+  function closeSheet(){
+    if (!sheetCard) return;
+    const card = sheetCard;
+    sheetCard = null;
+
+    card.classList.remove('sheet-open');
+    card.removeAttribute('role');
+    card.removeAttribute('aria-modal');
+    if (sheetOrigin && sheetOrigin.parent) {
+      sheetOrigin.parent.insertBefore(card, sheetOrigin.next);
+    }
+    sheetOrigin = null;
+
+    const backdrop = $('sheetBackdrop');
+    if (backdrop) backdrop.classList.remove('show');
+    document.body.classList.remove('sheet-visible');
+    updateFab();
+  }
+
+  /* The floating button only appears on tabs that have an add form. */
+  function updateFab(){
+    const fab = $('fab');
+    if (!fab) return;
+    fab.classList.toggle('show', !!activeFormCard() && currentTab !== 'dashboard');
+  }
+
+  /* Unpaid-debt counter on the footer menu. */
+  function updateNavBadges(){
+    const badge = $('navDebtBadge');
+    if (!badge) return;
+    const n = (data.debts || []).filter(d => d.status === 'unpaid').length;
+    badge.textContent = n > 99 ? '99+' : String(n);
+    badge.classList.toggle('show', n > 0);
+  }
+
+  /* Install to home screen (Chrome/Edge/Android; iOS uses Share -> Add to Home). */
+  let deferredInstall = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstall = e;
+    const btn = $('installBtn');
+    if (btn) btn.style.display = '';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstall = null;
+    const btn = $('installBtn');
+    if (btn) btn.style.display = 'none';
+    showToast('App installed on your device.');
+  });
+
+  const fabEl = $('fab');
+  if (fabEl) fabEl.addEventListener('click', openSheet);
+
+  const installBtnEl = $('installBtn');
+  if (installBtnEl) {
+    installBtnEl.addEventListener('click', async () => {
+      if (!deferredInstall) {
+        showToast('Open your browser menu and choose "Add to Home screen".');
+        return;
+      }
+      deferredInstall.prompt();
+      try { await deferredInstall.userChoice; } catch (_) {}
+      deferredInstall = null;
+      installBtnEl.style.display = 'none';
+    });
+  }
+
+  const sheetBackdropEl = $('sheetBackdrop');
+  if (sheetBackdropEl) sheetBackdropEl.addEventListener('click', closeSheet);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
   /* ---------- init ---------- */
   $('expDate').value = todayISO();
   $('debtDate').value = todayISO();
@@ -3746,8 +4134,9 @@
   // Initialize the Active Users display.
   updateBankStatus();
 
-  // Initialize tab navigation
-  switchTab('expenses');
+  // Initialize tab navigation (a deep link such as #savings is honoured)
+  const hashTab = (location.hash || '').replace('#', '');
+  switchTab(['dashboard', 'expenses', 'income', 'savings', 'debts'].indexOf(hashTab) !== -1 ? hashTab : 'expenses');
 
   // Warn straight away if this database still needs the currency migration.
   probeCurrencyColumn();
