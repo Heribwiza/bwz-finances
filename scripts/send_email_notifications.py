@@ -12,7 +12,7 @@ import os
 import sys
 import json
 import smtplib
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import urllib.request
@@ -292,6 +292,19 @@ def generate_daily_transactions_summary():
 
 if __name__ == "__main__":
     action = sys.argv[1] if len(sys.argv) > 1 else "all"
+
+    # Pause guard: scheduled runs stay silent until NOTIF_PAUSE_UNTIL (YYYY-MM-DD).
+    # Manual runs with the variable unset/empty bypass the pause entirely.
+    pause_until = (os.environ.get("NOTIF_PAUSE_UNTIL") or "").strip()
+    if pause_until:
+        try:
+            paused = datetime.now(timezone.utc).date() < date.fromisoformat(pause_until)
+        except ValueError:
+            print(f"Warning: invalid NOTIF_PAUSE_UNTIL {pause_until!r}; ignoring pause.", file=sys.stderr)
+            paused = False
+        if paused:
+            print(f"Notifications paused until {pause_until} - skipping '{action}'.")
+            sys.exit(0)
     print(f"Executing notification task: {action}")
 
     if action in ["queue", "all"]:

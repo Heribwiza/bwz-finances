@@ -42,3 +42,6 @@ service_role.key
 
 # Logs
 *.log
+
+# Python bytecode
+__pycache__/
